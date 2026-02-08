@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -11,6 +10,8 @@ import { Shield, Camera, CheckCircle2, ArrowLeft, Loader2 } from 'lucide-react';
 import { useFirestore } from '@/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 export default function VendorRegisterPage() {
   const [submitted, setSubmitted] = useState(false);
@@ -29,24 +30,29 @@ export default function VendorRegisterPage() {
     if (!firestore) return;
 
     setLoading(true);
-    try {
-      await addDoc(collection(firestore, 'vendors'), {
-        ...formData,
-        status: 'pending',
-        devicesCount: 0,
-        joinDate: new Date().toISOString().split('T')[0],
-        createdAt: serverTimestamp(),
+    const vendorsRef = collection(firestore, 'vendors');
+    const data = {
+      ...formData,
+      status: 'pending',
+      devicesCount: 0,
+      joinDate: new Date().toISOString().split('T')[0],
+      createdAt: serverTimestamp(),
+    };
+
+    addDoc(vendorsRef, data)
+      .then(() => {
+        setSubmitted(true);
+        setLoading(false);
+      })
+      .catch(async (error) => {
+        const permissionError = new FirestorePermissionError({
+          path: 'vendors',
+          operation: 'create',
+          requestResourceData: data,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        setLoading(false);
       });
-      setSubmitted(true);
-    } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Registration Failed',
-        description: error.message || 'Something went wrong while submitting your application.',
-      });
-    } finally {
-      setLoading(false);
-    }
   };
 
   if (submitted) {
