@@ -23,7 +23,7 @@ export default function VendorRegisterPage() {
           <div className="space-y-2">
             <CardTitle className="text-2xl font-headline">Registration Submitted!</CardTitle>
             <CardDescription>
-              Your vendor application for Finance Shield MDM has been received. Our Super Admin team will review your details and Aadhar verification within 24-48 hours.
+              Your vendor application for Emi.locker has been received. Our Super Admin team will review your details and Aadhar verification within 24-48 hours.
             </CardDescription>
           </div>
           <Button asChild className="w-full bg-accent hover:bg-accent/90">
@@ -44,7 +44,7 @@ export default function VendorRegisterPage() {
           </Link>
           <div className="flex items-center gap-2">
             <Shield className="h-8 w-8 text-accent" />
-            <span className="font-headline font-bold text-2xl text-primary">Finance Shield</span>
+            <span className="font-headline font-bold text-2xl text-primary">Emi.locker</span>
           </div>
         </div>
 

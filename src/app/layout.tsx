@@ -2,7 +2,7 @@ import type {Metadata} from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Finance Shield MDM | EMI Locker Solution',
+  title: 'Emi.locker | EMI Management Solution',
   description: 'Professional MDM solution for mobile device financing and EMI security.',
 };
 

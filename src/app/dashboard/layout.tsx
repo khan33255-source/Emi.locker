@@ -14,7 +14,7 @@ export default function DashboardLayout({
         <div className="p-6">
           <Link className="flex items-center gap-2" href="/dashboard">
             <Shield className="h-6 w-6 text-accent" />
-            <span className="font-headline font-bold text-lg">Finance Shield</span>
+            <span className="font-headline font-bold text-lg">Emi.locker</span>
           </Link>
         </div>
         <nav className="flex-1 px-4 space-y-1">

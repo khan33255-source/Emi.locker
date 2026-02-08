@@ -24,7 +24,7 @@ export default function ProvisioningPage() {
     <div className="space-y-8 max-w-4xl mx-auto">
       <div>
         <h1 className="text-3xl font-headline font-bold text-primary">Device Provisioning</h1>
-        <p className="text-muted-foreground">Setup new devices with Finance Shield MDM using the Android 7-tap QR method.</p>
+        <p className="text-muted-foreground">Setup new devices with Emi.locker using the Android 7-tap QR method.</p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
@@ -100,7 +100,7 @@ export default function ProvisioningPage() {
               </li>
               <li className="flex gap-2 text-yellow-400 font-bold">
                 <Shield size={18} className="shrink-0" />
-                Once set, Finance Shield becomes the "Device Owner" and cannot be uninstalled.
+                Once set, Emi.locker becomes the "Device Owner" and cannot be uninstalled.
               </li>
             </ul>
           </div>
