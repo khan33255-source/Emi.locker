@@ -1,27 +1,28 @@
+
 "use client";
 
 import { useDoc, useFirestore } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { useParams } from 'next/navigation';
-import { Smartphone, Lock, ShieldAlert, Phone, CreditCard, Loader2, AlertCircle, RefreshCw, Power, Maximize2 } from 'lucide-react';
+import { Smartphone, Lock, ShieldAlert, Phone, CreditCard, Loader2, RefreshCw, Power, Maximize2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { useEffect, useState, useRef } from 'react';
 
 export default function DeviceSimulatedPage() {
   const { deviceId } = useParams();
   const firestore = useFirestore();
-  const deviceRef = firestore ? doc(firestore, 'devices', deviceId as string) : null;
+  const deviceRef = firestore && deviceId ? doc(firestore, 'devices', deviceId as string) : null;
   const { data: device, loading } = useDoc<any>(deviceRef);
   const [booting, setBooting] = useState(true);
   const [currentTime, setCurrentTime] = useState<string>('');
+  const [mounted, setMounted] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => setBooting(false), 2000);
+    setMounted(true);
+    const bootTimer = setTimeout(() => setBooting(false), 1500);
     
-    // Set initial time and update every minute
     const updateTime = () => {
       const now = new Date();
       setCurrentTime(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
@@ -31,22 +32,22 @@ export default function DeviceSimulatedPage() {
     const interval = setInterval(updateTime, 60000);
     
     return () => {
-      clearTimeout(timer);
+      clearTimeout(bootTimer);
       clearInterval(interval);
     };
   }, []);
 
   const toggleFullScreen = () => {
-    if (!document.fullscreenElement) {
-      containerRef.current?.requestFullscreen().catch((err) => {
-        // Silently fail if blocked, standard for full-screen requests
-      });
-    } else {
-      document.exitFullscreen();
+    if (typeof document !== 'undefined') {
+      if (!document.fullscreenElement) {
+        containerRef.current?.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen();
+      }
     }
   };
 
-  if (loading || booting) {
+  if (!mounted || loading || booting) {
     return (
       <div className="min-h-screen bg-black flex flex-col items-center justify-center gap-4">
         <div className="relative">
@@ -78,13 +79,10 @@ export default function DeviceSimulatedPage() {
   return (
     <div ref={containerRef} className={`min-h-screen flex flex-col items-center justify-center p-0 transition-all duration-1000 ${isLocked ? 'bg-black' : 'bg-zinc-950'} overflow-hidden select-none`}>
       
-      {/* Background overlay for "System Alert" feel */}
       {isLocked && <div className="fixed inset-0 bg-red-950/20 backdrop-blur-sm z-0 pointer-events-none" />}
 
-      {/* Screen Content - Mobile Optimized */}
       <div className="relative w-full h-full max-w-md flex-1 flex flex-col z-10">
         
-        {/* Status Bar Simulation */}
         <div className="h-8 flex items-center justify-between px-6 text-[10px] font-bold text-zinc-500 tracking-wider">
           <span>{currentTime || '--:--'}</span>
           <div className="flex items-center gap-2">
@@ -186,12 +184,10 @@ export default function DeviceSimulatedPage() {
           )}
         </div>
 
-        {/* Home Bar */}
         <div className="w-24 h-1.5 bg-zinc-800 mx-auto mb-3 rounded-full opacity-50" />
       </div>
 
-      {/* Persistence Label for Testers */}
-      {typeof document !== 'undefined' && !document.fullscreenElement && (
+      {mounted && typeof document !== 'undefined' && !document.fullscreenElement && (
         <div className="fixed bottom-10 left-0 right-0 px-8 text-center pointer-events-none hidden md:block">
            <p className="text-[10px] text-zinc-700 font-bold uppercase tracking-[0.2em]">
              Hardware Emulator v4.2 | Etawah Test Unit

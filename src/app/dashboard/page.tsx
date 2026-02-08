@@ -1,5 +1,6 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Smartphone, Users, Lock, Unlock, AlertTriangle } from 'lucide-react';
+import { Smartphone, Users, Lock, Unlock, ShieldAlert } from 'lucide-react';
 
 export default function DashboardPage() {
   return (
@@ -13,7 +14,7 @@ export default function DashboardPage() {
         <StatCard title="Total Devices" value="1,284" icon={<Smartphone className="text-accent" />} trend="+12% from last month" />
         <StatCard title="Active Vendors" value="48" icon={<Users className="text-accent" />} trend="+3 this week" />
         <StatCard title="Locked Devices" value="156" icon={<Lock className="text-destructive" />} trend="12.1% of total" />
-        <StatCard title="Pending Approvals" value="5" icon={<AlertTriangle className="text-yellow-500" />} trend="Action required" />
+        <StatCard title="Pending Approvals" value="5" icon={<ShieldAlert className="text-yellow-500" />} trend="Action required" />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -49,16 +50,15 @@ export default function DashboardPage() {
             <CardTitle className="text-lg">Device Status Distribution</CardTitle>
           </CardHeader>
           <CardContent className="flex items-center justify-center h-[250px]">
-            {/* Simple placeholder for chart area */}
             <div className="w-full h-full flex items-end justify-around gap-4 px-4 pb-4">
               <div className="w-full bg-accent/20 rounded-t-lg relative" style={{ height: '80%' }}>
-                <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-bold">84% Active</span>
+                <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-bold">84% Active</span>
               </div>
               <div className="w-full bg-destructive/20 rounded-t-lg relative" style={{ height: '15%' }}>
-                <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-bold text-destructive">12% Locked</span>
+                <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-bold text-destructive">12% Locked</span>
               </div>
               <div className="w-full bg-muted rounded-t-lg relative" style={{ height: '5%' }}>
-                <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-bold text-muted-foreground">4% Offline</span>
+                <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-bold text-muted-foreground">4% Offline</span>
               </div>
             </div>
           </CardContent>

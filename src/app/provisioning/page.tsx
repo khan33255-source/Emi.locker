@@ -1,6 +1,7 @@
 
 "use client";
 
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Shield, QrCode, Copy, Info, Download, Smartphone, Terminal, Cpu, RefreshCw, Maximize2, ExternalLink } from 'lucide-react';
@@ -10,17 +11,24 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export default function ProvisioningPage() {
   const { toast } = useToast();
-  
-  const provisioningJson = {
+  const [mounted, setMounted] = useState(false);
+  const [origin, setOrigin] = useState('');
+
+  useEffect(() => {
+    setMounted(true);
+    setOrigin(window.location.origin);
+  }, []);
+
+  const provisioningJson = useMemo(() => ({
     "android.app.extra.PROVISIONING_DEVICE_ADMIN_COMPONENT_NAME": "com.emilocker.mdm/.receiver.DeviceAdminReceiver",
     "android.app.extra.PROVISIONING_DEVICE_ADMIN_PACKAGE_DOWNLOAD_LOCATION": "https://storage.googleapis.com/emilocker-assets/latest-agent.apk",
     "android.app.extra.PROVISIONING_ADMIN_EXTRAS_BUNDLE": {
       "firebase_project_id": "emilocker-a9f98",
-      "server_url": typeof window !== 'undefined' ? window.location.origin : '',
+      "server_url": origin || 'https://emilocker-a9f98.web.app',
       "auto_enroll": true,
       "policy": "strict_emi"
     }
-  };
+  }), [origin]);
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(JSON.stringify(provisioningJson, null, 2));
@@ -31,13 +39,21 @@ export default function ProvisioningPage() {
   };
 
   const copyBaseUrl = () => {
-    const baseUrl = `${window.location.origin}/device-view/[DEVICE_ID]`;
+    const baseUrl = `${origin || 'https://emilocker-a9f98.web.app'}/device-view/[DEVICE_ID]`;
     navigator.clipboard.writeText(baseUrl);
     toast({
       title: "URL Format Copied",
       description: "Replace [DEVICE_ID] with the actual ID from the dashboard.",
     });
   };
+
+  if (!mounted) {
+    return (
+      <div className="flex items-center justify-center p-24">
+        <RefreshCw className="h-8 w-8 animate-spin text-accent" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 max-w-5xl mx-auto pb-12 animate-in fade-in duration-700">
@@ -69,7 +85,7 @@ export default function ProvisioningPage() {
             <CardContent className="space-y-4">
                <div className="p-3 bg-white/50 rounded-lg border border-accent/20">
                   <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Simulator URL Format</p>
-                  <code className="text-xs text-accent break-all">{typeof window !== 'undefined' ? window.location.origin : ''}/device-view/[ID]</code>
+                  <code className="text-xs text-accent break-all">{origin || 'https://...'}/device-view/[ID]</code>
                   <Button variant="ghost" size="sm" className="h-6 mt-2 text-[9px] gap-1 px-2" onClick={copyBaseUrl}>
                     <Copy size={10} /> Copy Format
                   </Button>
@@ -165,47 +181,6 @@ export default function ProvisioningPage() {
           </CardContent>
         </Card>
       </div>
-
-      <Card className="bg-slate-900 border-none text-white overflow-hidden shadow-2xl">
-        <div className="md:flex items-stretch">
-          <div className="p-10 md:w-2/3 space-y-6">
-            <div className="space-y-2">
-              <h3 className="text-2xl font-headline font-bold flex items-center gap-3">
-                <RefreshCw className="text-accent" />
-                No-Reset Testing Workflow
-              </h3>
-              <p className="text-slate-400 text-sm">Follow these steps for immediate testing in Etawah without factory resetting your phone:</p>
-            </div>
-            
-            <div className="space-y-4">
-              <div className="flex gap-4">
-                <div className="h-8 w-8 rounded-lg bg-accent/20 flex items-center justify-center text-accent shrink-0 font-bold">1</div>
-                <div>
-                  <p className="font-semibold text-sm">Enroll Customer</p>
-                  <p className="text-xs text-slate-500">Use the "New Enrollment" form to register your own phone's IMEI.</p>
-                </div>
-              </div>
-              <div className="flex gap-4">
-                <div className="h-8 w-8 rounded-lg bg-accent/20 flex items-center justify-center text-accent shrink-0 font-bold">2</div>
-                <div>
-                  <p className="font-semibold text-sm">Install PWA App</p>
-                  <p className="text-xs text-slate-500">Open the generated link on your phone. Tap "Add to Home Screen" to install Emi.locker.</p>
-                </div>
-              </div>
-              <div className="flex gap-4">
-                <div className="h-8 w-8 rounded-lg bg-accent/20 flex items-center justify-center text-accent shrink-0 font-bold">3</div>
-                <div>
-                  <p className="font-semibold text-sm">Enable Immersive Mode</p>
-                  <p className="text-xs text-slate-500">Launch the app, tap "Maximize", and test the lock command from your laptop.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="hidden md:flex w-1/3 bg-white/5 items-center justify-center p-8">
-            <Smartphone size={160} className="text-white/10 rotate-12" />
-          </div>
-        </div>
-      </Card>
     </div>
   );
 }

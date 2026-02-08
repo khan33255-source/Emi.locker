@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Shield, Camera, CheckCircle2, ArrowLeft, Loader2, X, RefreshCw, Trash2 } from 'lucide-react';
+import { Shield, Camera, CheckCircle2, ArrowLeft, Loader2, Trash2, RefreshCw } from 'lucide-react';
 import { useFirestore } from '@/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -16,9 +16,13 @@ import { FirestorePermissionError } from '@/firebase/errors';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
-// Image compression utility
+// SSR-safe image compression utility
 const compressImage = (base64Str: string, maxWidth = 1024, maxHeight = 1024): Promise<string> => {
   return new Promise((resolve) => {
+    if (typeof window === 'undefined') {
+      resolve(base64Str);
+      return;
+    }
     const img = new Image();
     img.src = base64Str;
     img.onload = () => {
@@ -41,14 +45,16 @@ const compressImage = (base64Str: string, maxWidth = 1024, maxHeight = 1024): Pr
       canvas.height = height;
       const ctx = canvas.getContext('2d');
       ctx?.drawImage(img, 0, 0, width, height);
-      resolve(canvas.toDataURL('image/jpeg', 0.6)); // 60% quality is plenty for KYC
+      resolve(canvas.toDataURL('image/jpeg', 0.6));
     };
+    img.onerror = () => resolve(base64Str);
   });
 };
 
 export default function VendorRegisterPage() {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const firestore = useFirestore();
   const { toast } = useToast();
 
@@ -65,9 +71,12 @@ export default function VendorRegisterPage() {
   
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  // Camera Permission Effect
   useEffect(() => {
-    if (cameraActive.active) {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (mounted && cameraActive.active) {
       const getCameraPermission = async () => {
         try {
           const stream = await navigator.mediaDevices.getUserMedia({ 
@@ -89,13 +98,12 @@ export default function VendorRegisterPage() {
       };
       getCameraPermission();
     } else {
-      // Stop stream when camera closed
       if (videoRef.current && videoRef.current.srcObject) {
         const stream = videoRef.current.srcObject as MediaStream;
         stream.getTracks().forEach(track => track.stop());
       }
     }
-  }, [cameraActive.active, toast]);
+  }, [cameraActive.active, mounted, toast]);
 
   const capturePhoto = async () => {
     if (videoRef.current) {
@@ -136,14 +144,13 @@ export default function VendorRegisterPage() {
     setLoading(true);
     const vendorsRef = collection(firestore, 'vendors');
     
-    // We save Base64 directly to Firestore as a backup to Storage
     const data = {
       ...formData,
       status: 'pending',
       devicesCount: 0,
       joinDate: new Date().toISOString().split('T')[0],
       createdAt: serverTimestamp(),
-      aadharFront: aadharFront || '', // Saved as Base64 string
+      aadharFront: aadharFront || '',
       aadharBack: aadharBack || '',
     };
 
@@ -160,14 +167,15 @@ export default function VendorRegisterPage() {
         });
         errorEmitter.emit('permission-error', permissionError);
         setLoading(false);
-        
         toast({
           variant: 'destructive',
           title: 'Submission Error',
-          description: 'Your shop details were saved, but there was an error with high-res images. Please try again or contact support.',
+          description: 'Failed to save shop details. Please try again.',
         });
       });
   };
+
+  if (!mounted) return null;
 
   if (submitted) {
     return (
@@ -181,7 +189,7 @@ export default function VendorRegisterPage() {
           <div className="space-y-2">
             <CardTitle className="text-2xl font-headline">Registration Submitted!</CardTitle>
             <CardDescription>
-              Your vendor application for Emi.locker has been received. Our team will review your shop details and Aadhar verification within 24-48 hours.
+              Your vendor application for Emi.locker has been received. Our team will review your shop details within 24-48 hours.
             </CardDescription>
           </div>
           <Button asChild className="w-full bg-accent hover:bg-accent/90">
@@ -209,7 +217,7 @@ export default function VendorRegisterPage() {
         <Card className="shadow-xl border-t-4 border-t-accent">
           <CardHeader>
             <CardTitle className="text-2xl">Vendor Enrollment</CardTitle>
-            <CardDescription>Register your shop to start managing financed devices. All applications require Super Admin approval.</CardDescription>
+            <CardDescription>Register your shop to start managing financed devices.</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -250,12 +258,11 @@ export default function VendorRegisterPage() {
               <div className="space-y-4">
                 <Label className="text-base font-semibold">KYC Verification (Aadhar Card)</Label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Front Side Card */}
-                  <Card className="relative overflow-hidden border-2 border-dashed group">
+                  <Card className="relative overflow-hidden border-2 border-dashed group aspect-[4/3] flex flex-col items-center justify-center p-4">
                     {aadharFront ? (
-                      <div className="aspect-[4/3] relative">
-                        <img src={aadharFront} alt="Front" className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                      <div className="w-full h-full relative">
+                        <img src={aadharFront} alt="Front" className="w-full h-full object-cover rounded-md" />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                            <Button size="icon" variant="destructive" onClick={() => setAadharFront(null)}>
                               <Trash2 size={16} />
                            </Button>
@@ -265,35 +272,25 @@ export default function VendorRegisterPage() {
                         </div>
                       </div>
                     ) : (
-                      <div className="aspect-[4/3] flex flex-col items-center justify-center p-6 text-center space-y-3">
-                        <Camera className="h-10 w-10 text-muted-foreground" />
-                        <div className="text-sm font-medium">Front Side</div>
+                      <>
+                        <Camera className="h-8 w-8 text-muted-foreground mb-2" />
+                        <div className="text-xs font-medium mb-3">Front Side</div>
                         <div className="flex gap-2">
-                          <Button 
-                            type="button" 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => setCameraActive({ active: true, target: 'front' })}
-                          >
-                            Take Photo
-                          </Button>
+                          <Button type="button" variant="outline" size="sm" onClick={() => setCameraActive({ active: true, target: 'front' })}>Photo</Button>
                           <Label className="cursor-pointer">
-                            <Button type="button" variant="secondary" size="sm" asChild>
-                              <span>Upload</span>
-                            </Button>
+                            <Button type="button" variant="secondary" size="sm" asChild><span>Upload</span></Button>
                             <Input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'front')} />
                           </Label>
                         </div>
-                      </div>
+                      </>
                     )}
                   </Card>
 
-                  {/* Back Side Card */}
-                  <Card className="relative overflow-hidden border-2 border-dashed group">
+                  <Card className="relative overflow-hidden border-2 border-dashed group aspect-[4/3] flex flex-col items-center justify-center p-4">
                     {aadharBack ? (
-                      <div className="aspect-[4/3] relative">
-                        <img src={aadharBack} alt="Back" className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                      <div className="w-full h-full relative">
+                        <img src={aadharBack} alt="Back" className="w-full h-full object-cover rounded-md" />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                            <Button size="icon" variant="destructive" onClick={() => setAadharBack(null)}>
                               <Trash2 size={16} />
                            </Button>
@@ -303,36 +300,20 @@ export default function VendorRegisterPage() {
                         </div>
                       </div>
                     ) : (
-                      <div className="aspect-[4/3] flex flex-col items-center justify-center p-6 text-center space-y-3">
-                        <Camera className="h-10 w-10 text-muted-foreground" />
-                        <div className="text-sm font-medium">Back Side</div>
+                      <>
+                        <Camera className="h-8 w-8 text-muted-foreground mb-2" />
+                        <div className="text-xs font-medium mb-3">Back Side</div>
                         <div className="flex gap-2">
-                          <Button 
-                            type="button" 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => setCameraActive({ active: true, target: 'back' })}
-                          >
-                            Take Photo
-                          </Button>
+                          <Button type="button" variant="outline" size="sm" onClick={() => setCameraActive({ active: true, target: 'back' })}>Photo</Button>
                           <Label className="cursor-pointer">
-                            <Button type="button" variant="secondary" size="sm" asChild>
-                              <span>Upload</span>
-                            </Button>
+                            <Button type="button" variant="secondary" size="sm" asChild><span>Upload</span></Button>
                             <Input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'back')} />
                           </Label>
                         </div>
-                      </div>
+                      </>
                     )}
                   </Card>
                 </div>
-              </div>
-
-              <div className="bg-secondary/50 p-4 rounded-lg flex items-start gap-3">
-                <Shield className="h-5 w-5 text-accent shrink-0 mt-0.5" />
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  By registering, you agree to comply with MDM ethical usage guidelines. Your shop will be able to lock devices for genuine EMI defaults only. Photos are encrypted and compressed for security.
-                </p>
               </div>
 
               <Button type="submit" disabled={loading} className="w-full bg-accent hover:bg-accent/90 h-12 text-lg">
@@ -344,46 +325,22 @@ export default function VendorRegisterPage() {
         </Card>
       </div>
 
-      {/* Camera Dialog */}
       <Dialog open={cameraActive.active} onOpenChange={(open) => !open && setCameraActive({ active: false, target: null })}>
-        <DialogContent className="max-w-lg p-0 overflow-hidden bg-black">
-          <DialogHeader className="p-4 bg-white">
-            <DialogTitle>Capture Aadhar {cameraActive.target === 'front' ? 'Front' : 'Back'}</DialogTitle>
-          </DialogHeader>
-          
+        <DialogContent className="max-w-lg p-0 overflow-hidden bg-black border-none">
           <div className="relative aspect-video bg-zinc-900">
-            <video 
-              ref={videoRef} 
-              className="w-full h-full object-cover" 
-              autoPlay 
-              muted 
-              playsInline 
-            />
-            
+            <video ref={videoRef} className="w-full h-full object-cover" autoPlay muted playsInline />
             {hasCameraPermission === false && (
               <div className="absolute inset-0 flex items-center justify-center p-6">
-                <Alert variant="destructive" className="bg-white">
-                  <AlertTitle>Camera Access Required</AlertTitle>
-                  <AlertDescription>
-                    Please allow camera access in your browser settings to take photos.
-                  </AlertDescription>
-                </Alert>
+                <Alert variant="destructive" className="bg-white"><AlertTitle>Camera Required</AlertTitle></Alert>
               </div>
             )}
           </div>
-
-          <DialogFooter className="p-4 bg-white flex flex-row justify-between items-center sm:justify-between">
-            <Button variant="outline" onClick={() => setCameraActive({ active: false, target: null })}>
-              Cancel
+          <DialogFooter className="p-4 bg-white flex flex-row justify-between items-center">
+            <Button variant="outline" size="sm" onClick={() => setCameraActive({ active: false, target: null })}>Cancel</Button>
+            <Button className="rounded-full h-12 w-12 p-0 bg-accent hover:bg-accent/90" onClick={capturePhoto} disabled={!hasCameraPermission}>
+              <div className="h-8 w-8 rounded-full border-4 border-white" />
             </Button>
-            <Button 
-              className="rounded-full h-14 w-14 p-0 bg-accent hover:bg-accent/90 shadow-lg" 
-              onClick={capturePhoto}
-              disabled={!hasCameraPermission}
-            >
-              <div className="h-10 w-10 rounded-full border-4 border-white" />
-            </Button>
-            <div className="w-20" /> {/* Spacer */}
+            <div className="w-16" />
           </DialogFooter>
         </DialogContent>
       </Dialog>
