@@ -1,41 +1,51 @@
+
 "use client";
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Search, Smartphone, Lock, Unlock, AlertCircle, Plus, MoreVertical } from 'lucide-react';
+import { Search, Smartphone, Lock, Unlock, Plus, MoreVertical, Loader2, ExternalLink } from 'lucide-react';
 import { DeviceLockDialog } from '@/components/device-lock-dialog';
+import { useCollection, useFirestore } from '@/firebase';
+import { collection, updateDoc, doc } from 'firebase/firestore';
+import Link from 'next/link';
 
 type Device = {
   id: string;
   imei: string;
   model: string;
-  customer: string;
+  customerName: string;
   status: 'active' | 'locked' | 'offline';
   emiAmount: number;
   dueDate: string;
-  vendor: string;
+  vendorId: string;
+  isLocked?: boolean;
 };
 
-const MOCK_DEVICES: Device[] = [
-  { id: 'DEV-001', imei: '35422891002231', model: 'Samsung Galaxy A54', customer: 'Rahul Sharma', status: 'active', emiAmount: 2400, dueDate: '2024-06-15', vendor: 'City Mobile' },
-  { id: 'DEV-002', imei: '86221004455219', model: 'Redmi Note 13 Pro', customer: 'Anita Singh', status: 'locked', emiAmount: 1850, dueDate: '2024-05-30', vendor: 'City Mobile' },
-  { id: 'DEV-003', imei: '35991200114422', model: 'Vivo V29', customer: 'Vikram Adwani', status: 'active', emiAmount: 3200, dueDate: '2024-06-12', vendor: 'Galaxy Hub' },
-  { id: 'DEV-004', imei: '86440022113355', model: 'Oppo Reno 10', customer: 'Sonia Gupta', status: 'offline', emiAmount: 2100, dueDate: '2024-06-10', vendor: 'City Mobile' },
-];
-
 export default function DevicesPage() {
-  const [devices, setDevices] = useState(MOCK_DEVICES);
+  const firestore = useFirestore();
+  const devicesQuery = useMemo(() => firestore ? collection(firestore, 'devices') : null, [firestore]);
+  const { data: devices, loading } = useCollection<Device>(devicesQuery);
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
 
-  const filteredDevices = devices.filter(d => 
-    d.customer.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    d.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    d.imei.includes(searchTerm)
+  const filteredDevices = devices?.filter(d => 
+    d.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    d.model?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    d.imei?.includes(searchTerm)
   );
+
+  const handleUnlock = async (deviceId: string) => {
+    if (!firestore) return;
+    const deviceRef = doc(firestore, 'devices', deviceId);
+    await updateDoc(deviceRef, {
+      status: 'active',
+      isLocked: false
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -60,74 +70,87 @@ export default function DevicesPage() {
         />
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {filteredDevices.map((device) => (
-          <Card key={device.id} className="relative overflow-hidden hover:shadow-lg transition-all group">
-            <div className={`absolute top-0 left-0 w-1 h-full ${
-              device.status === 'locked' ? 'bg-destructive' : 
-              device.status === 'active' ? 'bg-green-500' : 'bg-muted'
-            }`} />
-            <CardHeader className="pb-2">
-              <div className="flex justify-between items-start">
-                <div className="h-10 w-10 rounded-lg bg-secondary flex items-center justify-center text-primary">
-                  <Smartphone size={24} />
+      {loading ? (
+        <div className="flex items-center justify-center p-12">
+          <Loader2 className="h-8 w-8 animate-spin text-accent" />
+        </div>
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {filteredDevices?.map((device) => (
+            <Card key={device.id} className="relative overflow-hidden hover:shadow-lg transition-all group">
+              <div className={`absolute top-0 left-0 w-1 h-full ${
+                device.status === 'locked' ? 'bg-destructive' : 
+                device.status === 'active' ? 'bg-green-500' : 'bg-muted'
+              }`} />
+              <CardHeader className="pb-2">
+                <div className="flex justify-between items-start">
+                  <div className="h-10 w-10 rounded-lg bg-secondary flex items-center justify-center text-primary">
+                    <Smartphone size={24} />
+                  </div>
+                  <div className="flex gap-2">
+                    <Badge variant={device.status === 'locked' ? 'destructive' : 'secondary'} className="capitalize">
+                      {device.status}
+                    </Badge>
+                    <Link href={`/device-view/${device.id}`} target="_blank" className="text-muted-foreground hover:text-accent">
+                      <ExternalLink size={16} />
+                    </Link>
+                  </div>
                 </div>
-                <Badge variant={device.status === 'locked' ? 'destructive' : 'secondary'} className="capitalize">
-                  {device.status}
-                </Badge>
-              </div>
-              <CardTitle className="mt-4 text-lg font-headline">{device.model}</CardTitle>
-              <CardDescription className="font-mono text-xs">{device.imei}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div>
-                  <p className="text-muted-foreground text-xs uppercase font-semibold">Customer</p>
-                  <p className="font-medium">{device.customer}</p>
+                <CardTitle className="mt-4 text-lg font-headline">{device.model}</CardTitle>
+                <CardDescription className="font-mono text-xs">{device.imei}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <p className="text-muted-foreground text-xs uppercase font-semibold">Customer</p>
+                    <p className="font-medium">{device.customerName}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-xs uppercase font-semibold">Due Date</p>
+                    <p className="font-medium">{device.dueDate}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-muted-foreground text-xs uppercase font-semibold">Due Date</p>
-                  <p className="font-medium">{device.dueDate}</p>
-                </div>
-              </div>
-              
-              <div className="pt-4 flex gap-2">
-                {device.status === 'active' ? (
-                  <Button 
-                    variant="destructive" 
-                    className="flex-1 gap-2"
-                    onClick={() => setSelectedDevice(device)}
-                  >
-                    <Lock size={16} />
-                    Remote Lock
+                
+                <div className="pt-4 flex gap-2">
+                  {device.status !== 'locked' ? (
+                    <Button 
+                      variant="destructive" 
+                      className="flex-1 gap-2"
+                      onClick={() => setSelectedDevice(device)}
+                    >
+                      <Lock size={16} />
+                      Remote Lock
+                    </Button>
+                  ) : (
+                    <Button 
+                      variant="outline" 
+                      className="flex-1 gap-2 border-green-500 text-green-600 hover:bg-green-50"
+                      onClick={() => handleUnlock(device.id)}
+                    >
+                      <Unlock size={16} />
+                      Unlock Device
+                    </Button>
+                  )}
+                  <Button variant="ghost" size="icon">
+                    <MoreVertical size={16} />
                   </Button>
-                ) : (
-                  <Button 
-                    variant="outline" 
-                    className="flex-1 gap-2 border-green-500 text-green-600 hover:bg-green-50"
-                    disabled={device.status === 'offline'}
-                  >
-                    <Unlock size={16} />
-                    Unlock Device
-                  </Button>
-                )}
-                <Button variant="ghost" size="icon">
-                  <MoreVertical size={16} />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+          {!filteredDevices?.length && (
+            <div className="col-span-full text-center py-12 text-muted-foreground bg-secondary/20 rounded-xl border border-dashed">
+              No devices found matching your search.
+            </div>
+          )}
+        </div>
+      )}
 
       {selectedDevice && (
         <DeviceLockDialog 
           device={selectedDevice} 
           onClose={() => setSelectedDevice(null)} 
-          onLock={(id) => {
-             setDevices(prev => prev.map(d => d.id === id ? {...d, status: 'locked'} : d));
-             setSelectedDevice(null);
-          }}
+          onLock={() => setSelectedDevice(null)}
         />
       )}
     </div>

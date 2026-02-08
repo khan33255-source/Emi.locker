@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -6,10 +7,47 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Shield, Camera, CheckCircle2, ArrowLeft } from 'lucide-react';
+import { Shield, Camera, CheckCircle2, ArrowLeft, Loader2 } from 'lucide-react';
+import { useFirestore } from '@/firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
 
 export default function VendorRegisterPage() {
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const firestore = useFirestore();
+  const { toast } = useToast();
+
+  const [formData, setFormData] = useState({
+    shopName: '',
+    ownerName: '',
+    mobile: ''
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!firestore) return;
+
+    setLoading(true);
+    try {
+      await addDoc(collection(firestore, 'vendors'), {
+        ...formData,
+        status: 'pending',
+        devicesCount: 0,
+        joinDate: new Date().toISOString().split('T')[0],
+        createdAt: serverTimestamp(),
+      });
+      setSubmitted(true);
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Registration Failed',
+        description: error.message || 'Something went wrong while submitting your application.',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (submitted) {
     return (
@@ -54,19 +92,38 @@ export default function VendorRegisterPage() {
             <CardDescription>Register your shop to start managing financed devices. All applications require Super Admin approval.</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={(e) => { e.preventDefault(); setSubmitted(true); }} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="shop-name">Shop Name</Label>
-                  <Input id="shop-name" placeholder="E.g. Galaxy Mobile Center" required />
+                  <Input 
+                    id="shop-name" 
+                    placeholder="E.g. Galaxy Mobile Center" 
+                    required 
+                    value={formData.shopName}
+                    onChange={(e) => setFormData({...formData, shopName: e.target.value})}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="owner-name">Owner Name</Label>
-                  <Input id="owner-name" placeholder="As per Aadhar" required />
+                  <Input 
+                    id="owner-name" 
+                    placeholder="As per Aadhar" 
+                    required 
+                    value={formData.ownerName}
+                    onChange={(e) => setFormData({...formData, ownerName: e.target.value})}
+                  />
                 </div>
                 <div className="space-y-2 md:col-span-2">
                   <Label htmlFor="mobile">Mobile Number</Label>
-                  <Input id="mobile" type="tel" placeholder="+91 XXXXX XXXXX" required />
+                  <Input 
+                    id="mobile" 
+                    type="tel" 
+                    placeholder="+91 XXXXX XXXXX" 
+                    required 
+                    value={formData.mobile}
+                    onChange={(e) => setFormData({...formData, mobile: e.target.value})}
+                  />
                 </div>
               </div>
 
@@ -93,7 +150,8 @@ export default function VendorRegisterPage() {
                 </p>
               </div>
 
-              <Button type="submit" className="w-full bg-accent hover:bg-accent/90 h-12 text-lg">
+              <Button type="submit" disabled={loading} className="w-full bg-accent hover:bg-accent/90 h-12 text-lg">
+                {loading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
                 Submit Application
               </Button>
             </form>

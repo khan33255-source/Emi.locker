@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -7,28 +8,33 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Sparkles, Loader2, Lock, ShieldAlert } from 'lucide-react';
 import { generateEmiOverlayMessage } from '@/ai/flows/generate-emi-overlay-message';
+import { useFirestore } from '@/firebase';
+import { doc, updateDoc } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
 
 type Device = {
   id: string;
   imei: string;
   model: string;
-  customer: string;
+  customerName: string;
   emiAmount: number;
   dueDate: string;
-  vendor: string;
+  vendorId: string;
 };
 
-export function DeviceLockDialog({ device, onClose, onLock }: { device: Device, onClose: () => void, onLock: (id: string) => void }) {
+export function DeviceLockDialog({ device, onClose, onLock }: { device: Device, onClose: () => void, onLock: () => void }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isLocking, setIsLocking] = useState(false);
   const [message, setMessage] = useState('');
+  const firestore = useFirestore();
+  const { toast } = useToast();
 
   const handleGenerate = async () => {
     setIsGenerating(true);
     try {
       const result = await generateEmiOverlayMessage({
         deviceName: device.model,
-        shopName: device.vendor,
+        shopName: 'Vendor Store', // This should ideally come from vendor context
         ownerName: 'Admin',
         emiAmount: device.emiAmount,
         dueDate: device.dueDate
@@ -36,19 +42,38 @@ export function DeviceLockDialog({ device, onClose, onLock }: { device: Device, 
       setMessage(result.overlayMessage);
     } catch (error) {
       console.error('Failed to generate message:', error);
-      setMessage(`PAYMENT OVERDUE: Your EMI for ${device.model} is pending. Please visit ${device.vendor} immediately to avoid permanent lock.`);
+      setMessage(`PAYMENT OVERDUE: Your EMI for ${device.model} is pending. Please visit the shop immediately to avoid permanent lock.`);
     } finally {
       setIsGenerating(false);
     }
   };
 
-  const handleLockAction = () => {
+  const handleLockAction = async () => {
+    if (!firestore) return;
     setIsLocking(true);
-    // Simulate API call to Firebase
-    setTimeout(() => {
-      onLock(device.id);
+    
+    try {
+      const deviceRef = doc(firestore, 'devices', device.id);
+      await updateDoc(deviceRef, {
+        status: 'locked',
+        isLocked: true,
+        lockMessage: message
+      });
+      toast({
+        title: "Lock Command Executed",
+        description: `Device ${device.imei} has been locked remotely.`
+      });
+      onLock();
+      onClose();
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: "Lock Failed",
+        description: error.message
+      });
+    } finally {
       setIsLocking(false);
-    }, 1500);
+    }
   };
 
   return (
@@ -60,7 +85,7 @@ export function DeviceLockDialog({ device, onClose, onLock }: { device: Device, 
             <DialogTitle>Remote Lock Command</DialogTitle>
           </div>
           <DialogDescription>
-            You are about to lock <strong>{device.customer}&apos;s</strong> device ({device.model}). This will enforce Kiosk Mode until payment is verified.
+            You are about to lock <strong>{device.customerName}&apos;s</strong> device ({device.model}). This will enforce Kiosk Mode until payment is verified.
           </DialogDescription>
         </DialogHeader>
 

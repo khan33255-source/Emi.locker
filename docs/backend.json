@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "Vendor": {
@@ -10,7 +11,9 @@
         "mobile": { "type": "string" },
         "status": { "type": "string", "enum": ["active", "pending", "suspended"] },
         "devicesCount": { "type": "number" },
-        "joinDate": { "type": "string", "format": "date" }
+        "joinDate": { "type": "string", "format": "date" },
+        "aadharFront": { "type": "string", "description": "Base64 or URL of Aadhar front" },
+        "aadharBack": { "type": "string", "description": "Base64 or URL of Aadhar back" }
       },
       "required": ["shopName", "ownerName", "mobile", "status"]
     },
@@ -23,6 +26,8 @@
         "model": { "type": "string" },
         "customerName": { "type": "string" },
         "status": { "type": "string", "enum": ["active", "locked", "offline"] },
+        "isLocked": { "type": "boolean", "description": "Whether the remote lock is currently active" },
+        "lockMessage": { "type": "string", "description": "The message displayed on the locked screen" },
         "emiAmount": { "type": "number" },
         "dueDate": { "type": "string", "format": "date" },
         "vendorId": { "type": "string" }
