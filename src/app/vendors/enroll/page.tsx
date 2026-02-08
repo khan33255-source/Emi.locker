@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,6 +16,7 @@ import Link from 'next/link';
 export default function CustomerEnrollmentPage() {
   const [loading, setLoading] = useState(false);
   const [enrolledId, setEnrolledId] = useState<string | null>(null);
+  const [baseUrl, setBaseUrl] = useState('');
   const firestore = useFirestore();
   const { toast } = useToast();
 
@@ -28,6 +28,12 @@ export default function CustomerEnrollmentPage() {
     emiMonths: 12,
     emiAmount: 0
   });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setBaseUrl(window.location.origin);
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,7 +76,7 @@ export default function CustomerEnrollmentPage() {
   };
 
   if (enrolledId) {
-    const clientUrl = `${window.location.origin}/device-view/${enrolledId}`;
+    const clientUrl = `${baseUrl}/device-view/${enrolledId}`;
     
     return (
       <div className="max-w-md mx-auto py-12 space-y-6 animate-in zoom-in duration-300">

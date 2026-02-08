@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useDoc, useFirestore } from '@/firebase';
@@ -16,17 +15,31 @@ export default function DeviceSimulatedPage() {
   const deviceRef = firestore ? doc(firestore, 'devices', deviceId as string) : null;
   const { data: device, loading } = useDoc<any>(deviceRef);
   const [booting, setBooting] = useState(true);
+  const [currentTime, setCurrentTime] = useState<string>('');
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setBooting(false), 2000);
-    return () => clearTimeout(timer);
+    
+    // Set initial time and update every minute
+    const updateTime = () => {
+      const now = new Date();
+      setCurrentTime(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+    };
+    
+    updateTime();
+    const interval = setInterval(updateTime, 60000);
+    
+    return () => {
+      clearTimeout(timer);
+      clearInterval(interval);
+    };
   }, []);
 
   const toggleFullScreen = () => {
     if (!document.fullscreenElement) {
       containerRef.current?.requestFullscreen().catch((err) => {
-        console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+        // Silently fail if blocked, standard for full-screen requests
       });
     } else {
       document.exitFullscreen();
@@ -73,7 +86,7 @@ export default function DeviceSimulatedPage() {
         
         {/* Status Bar Simulation */}
         <div className="h-8 flex items-center justify-between px-6 text-[10px] font-bold text-zinc-500 tracking-wider">
-          <span>{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+          <span>{currentTime || '--:--'}</span>
           <div className="flex items-center gap-2">
             <span className="text-emerald-500/50">LTE</span>
             <div className="h-3 w-5 border border-zinc-700 rounded-sm relative p-[1px]">
@@ -178,7 +191,7 @@ export default function DeviceSimulatedPage() {
       </div>
 
       {/* Persistence Label for Testers */}
-      {!document.fullscreenElement && (
+      {typeof document !== 'undefined' && !document.fullscreenElement && (
         <div className="fixed bottom-10 left-0 right-0 px-8 text-center pointer-events-none hidden md:block">
            <p className="text-[10px] text-zinc-700 font-bold uppercase tracking-[0.2em]">
              Hardware Emulator v4.2 | Etawah Test Unit
