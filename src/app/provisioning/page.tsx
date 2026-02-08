@@ -3,8 +3,10 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Shield, QrCode, Copy, Info, Download, Smartphone, Terminal, HardDrive, Cpu } from 'lucide-react';
+import { Shield, QrCode, Copy, Info, Download, Smartphone, Terminal, Cpu, RefreshCw, Maximize2, ExternalLink } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export default function ProvisioningPage() {
   const { toast } = useToast();
@@ -12,11 +14,9 @@ export default function ProvisioningPage() {
   const provisioningJson = {
     "android.app.extra.PROVISIONING_DEVICE_ADMIN_COMPONENT_NAME": "com.emilocker.mdm/.receiver.DeviceAdminReceiver",
     "android.app.extra.PROVISIONING_DEVICE_ADMIN_PACKAGE_DOWNLOAD_LOCATION": "https://storage.googleapis.com/emilocker-assets/latest-agent.apk",
-    "android.app.extra.PROVISIONING_DEVICE_ADMIN_PACKAGE_CHECKSUM": "WkVYQkdIVFpLTU5PUE9SU1RVT1ZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVlc=",
-    "android.app.extra.PROVISIONING_LEAVE_ALL_SYSTEM_APPS_ENABLED": true,
     "android.app.extra.PROVISIONING_ADMIN_EXTRAS_BUNDLE": {
       "firebase_project_id": "emilocker-a9f98",
-      "server_url": window.location.origin,
+      "server_url": typeof window !== 'undefined' ? window.location.origin : '',
       "auto_enroll": true,
       "policy": "strict_emi"
     }
@@ -34,56 +34,70 @@ export default function ProvisioningPage() {
     <div className="space-y-8 max-w-5xl mx-auto pb-12 animate-in fade-in duration-700">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-headline font-extrabold text-primary tracking-tight">Provisioning Terminal</h1>
-          <p className="text-muted-foreground text-lg">Deploy the Emi.locker Device Owner agent to new hardware in Etawah.</p>
+          <h1 className="text-4xl font-headline font-extrabold text-primary tracking-tight">Deployment Terminal</h1>
+          <p className="text-muted-foreground text-lg">Manage device enrollment and "Web App" simulation for local testing.</p>
         </div>
-        <Badge variant="secondary" className="w-fit h-7 px-3 bg-accent/20 text-accent border-accent/20">
-          Android Enterprise Ready
-        </Badge>
+        <div className="flex gap-2">
+          <Badge variant="secondary" className="h-7 px-3 bg-accent/20 text-accent border-accent/20">
+            Web-Simulator v4.2
+          </Badge>
+          <Badge variant="outline" className="h-7 px-3 border-emerald-500/20 text-emerald-500">
+            PWA Enabled
+          </Badge>
+        </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Step 1: Factory Reset */}
-        <Card className="border-t-4 border-t-yellow-500">
-          <CardHeader>
-            <div className="h-10 w-10 bg-yellow-500/10 rounded-full flex items-center justify-center text-yellow-600 mb-2">
-              <RefreshCw size={20} />
-            </div>
-            <CardTitle className="text-lg">1. Factory Reset</CardTitle>
-            <CardDescription>Device must be at the "Welcome" screen.</CardDescription>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">
-            Clear any existing accounts (FRP). Tap the screen 7 times in the same spot to activate the hidden QR scanner.
-          </CardContent>
-        </Card>
+      <div className="grid gap-6 md:grid-cols-2">
+         {/* Web App Deployment - FASTEST FOR ETAWAH */}
+         <Card className="border-accent shadow-lg bg-accent/5">
+            <CardHeader>
+               <div className="h-12 w-12 bg-accent rounded-xl flex items-center justify-center text-white mb-2 shadow-lg">
+                  <Maximize2 size={24} />
+               </div>
+               <CardTitle className="text-xl">Fast-Track: Web Enrollment</CardTitle>
+               <CardDescription>Test the lock logic immediately on any phone.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+               <ul className="text-sm space-y-2 text-muted-foreground">
+                  <li className="flex gap-2"><div className="h-1.5 w-1.5 rounded-full bg-accent mt-1.5 shrink-0" /> Open the Device URL on the customer's phone Chrome browser.</li>
+                  <li className="flex gap-2"><div className="h-1.5 w-1.5 rounded-full bg-accent mt-1.5 shrink-0" /> Select <strong>"Install App"</strong> or "Add to Home Screen".</li>
+                  <li className="flex gap-2"><div className="h-1.5 w-1.5 rounded-full bg-accent mt-1.5 shrink-0" /> Toggle <strong>"Full Screen"</strong> for a total lockdown simulation.</li>
+               </ul>
+               <Button className="w-full bg-accent hover:bg-accent/90 gap-2" asChild>
+                  <a href="/devices">
+                     <ExternalLink size={18} />
+                     Go to Device List
+                  </a>
+               </Button>
+            </CardContent>
+         </Card>
 
-        {/* Step 2: Scan QR */}
-        <Card className="border-t-4 border-t-accent">
-          <CardHeader>
-            <div className="h-10 w-10 bg-accent/10 rounded-full flex items-center justify-center text-accent mb-2">
-              <QrCode size={20} />
-            </div>
-            <CardTitle className="text-lg">2. Scan Configuration</CardTitle>
-            <CardDescription>Link hardware to your cloud dashboard.</CardDescription>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">
-            Connect to WiFi. Scan the generated QR code. The device will automatically download and set the MDM agent as **Device Owner**.
-          </CardContent>
-        </Card>
-
-        {/* Step 3: Lockdown */}
-        <Card className="border-t-4 border-t-destructive">
-          <CardHeader>
-            <div className="h-10 w-10 bg-destructive/10 rounded-full flex items-center justify-center text-destructive mb-2">
-              <Shield size={20} />
-            </div>
-            <CardTitle className="text-lg">3. Total Control</CardTitle>
-            <CardDescription>Uninstallation is now impossible.</CardDescription>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">
-            The agent now has high-level permissions to enforce Kiosk mode, block USB debugging, and prevent factory resets.
-          </CardContent>
-        </Card>
+         {/* Native APK Deployment */}
+         <Card>
+            <CardHeader>
+               <div className="h-12 w-12 bg-primary rounded-xl flex items-center justify-center text-white mb-2">
+                  <Cpu size={24} />
+               </div>
+               <CardTitle className="text-xl">Production: Native APK</CardTitle>
+               <CardDescription>For full OS-level control and factory-reset security.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+               <p className="text-xs text-muted-foreground leading-relaxed">
+                  Requires a custom Android Studio project using the <strong>DevicePolicyManager</strong> API. 
+                  This provides "Device Administrator" or "Device Owner" permissions to block uninstallation.
+               </p>
+               <Alert className="bg-secondary/50 border-none">
+                  <Info size={16} />
+                  <AlertDescription className="text-[11px]">
+                     Use the JSON below in your native Android app's <code>AdminExtras</code> to connect to this dashboard.
+                  </AlertDescription>
+               </Alert>
+               <Button variant="outline" className="w-full gap-2" onClick={copyToClipboard}>
+                  <Copy size={16} />
+                  Copy DPC Config JSON
+               </Button>
+            </CardContent>
+         </Card>
       </div>
 
       <div className="grid gap-6 md:grid-cols-5">
@@ -91,29 +105,23 @@ export default function ProvisioningPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <QrCode className="text-accent" />
-              Enrollment QR
+              Master QR Scanner
             </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col items-center gap-6">
             <div className="p-6 bg-white rounded-3xl border shadow-inner flex items-center justify-center aspect-square w-full max-w-[280px]">
               <div className="relative group cursor-pointer">
-                 <QrCode size={200} className="text-primary opacity-10 blur-[2px]" />
+                 <QrCode size={200} className="text-primary opacity-20 blur-[1px]" />
                  <div className="absolute inset-0 flex items-center justify-center flex-col gap-2">
-                    <Button variant="default" className="bg-accent hover:bg-accent/90 shadow-lg gap-2">
+                    <Button variant="default" className="bg-primary hover:bg-primary/90 shadow-lg gap-2">
                        <Terminal size={16} />
                        Generate Master QR
                     </Button>
-                    <p className="text-[10px] text-muted-foreground text-center px-4">Encryption: AES-256 Enabled</p>
+                    <p className="text-[9px] text-muted-foreground text-center px-4 uppercase font-bold tracking-widest">Encrypted Payload</p>
                  </div>
               </div>
             </div>
             <div className="w-full space-y-3">
-               <Alert className="bg-secondary/30 border-none">
-                  <Info size={16} className="text-accent" />
-                  <AlertDescription className="text-xs">
-                    This QR embeds the DPC package location and Admin Extras for Firebase Auth.
-                  </AlertDescription>
-               </Alert>
                <Button variant="outline" className="w-full gap-2 border-accent text-accent hover:bg-accent/5">
                   <Download size={16} />
                   Print Deployment Label
@@ -125,8 +133,8 @@ export default function ProvisioningPage() {
         <Card className="md:col-span-3 h-full">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle>DPC Configuration (JSON)</CardTitle>
-              <CardDescription>Advanced manifest for Android Device Policy Controller.</CardDescription>
+              <CardTitle>DPC Manifest (JSON)</CardTitle>
+              <CardDescription>Advanced config for Android Device Policy Controller.</CardDescription>
             </div>
             <Button variant="ghost" size="icon" onClick={copyToClipboard} className="hover:bg-accent/10 hover:text-accent">
               <Copy size={18} />
@@ -134,11 +142,7 @@ export default function ProvisioningPage() {
           </CardHeader>
           <CardContent>
             <div className="relative">
-              <div className="absolute top-2 right-2 flex gap-1">
-                <Badge variant="outline" className="text-[10px] uppercase opacity-50">v2.4</Badge>
-                <Badge variant="outline" className="text-[10px] uppercase opacity-50">Production</Badge>
-              </div>
-              <pre className="bg-slate-950 text-emerald-400 p-6 rounded-xl text-xs font-mono overflow-x-auto h-[400px] border border-white/10 shadow-2xl leading-relaxed">
+              <pre className="bg-slate-950 text-emerald-400 p-6 rounded-xl text-xs font-mono overflow-x-auto h-[350px] border border-white/10 shadow-2xl leading-relaxed">
                 {JSON.stringify(provisioningJson, null, 2)}
               </pre>
             </div>
@@ -151,32 +155,32 @@ export default function ProvisioningPage() {
           <div className="p-10 md:w-2/3 space-y-6">
             <div className="space-y-2">
               <h3 className="text-2xl font-headline font-bold flex items-center gap-3">
-                <Cpu className="text-accent" />
-                APK Integration Guide
+                <RefreshCw className="text-accent" />
+                No-Reset Testing Workflow
               </h3>
-              <p className="text-slate-400 text-sm">Follow these steps to generate your physical testing APK for Etawah deployment:</p>
+              <p className="text-slate-400 text-sm">Follow these steps for immediate testing in Etawah without factory resetting your phone:</p>
             </div>
             
             <div className="space-y-4">
               <div className="flex gap-4">
                 <div className="h-8 w-8 rounded-lg bg-accent/20 flex items-center justify-center text-accent shrink-0 font-bold">1</div>
                 <div>
-                  <p className="font-semibold text-sm">Download DPC Source</p>
-                  <p className="text-xs text-slate-500">Get the Device Policy Controller boilerplate from GitHub (Android Enterprise samples).</p>
+                  <p className="font-semibold text-sm">Enroll Customer</p>
+                  <p className="text-xs text-slate-500">Use the "New Enrollment" form to register your own phone's IMEI.</p>
                 </div>
               </div>
               <div className="flex gap-4">
                 <div className="h-8 w-8 rounded-lg bg-accent/20 flex items-center justify-center text-accent shrink-0 font-bold">2</div>
                 <div>
-                  <p className="font-semibold text-sm">Set Firebase Endpoints</p>
-                  <p className="text-xs text-slate-500">Point the APK to your project: <code className="text-accent">emilocker-a9f98.firebaseio.com</code></p>
+                  <p className="font-semibold text-sm">Install PWA App</p>
+                  <p className="text-xs text-slate-500">Open the generated link on your phone. Tap "Add to Home Screen" to install Emi.locker.</p>
                 </div>
               </div>
               <div className="flex gap-4">
                 <div className="h-8 w-8 rounded-lg bg-accent/20 flex items-center justify-center text-accent shrink-0 font-bold">3</div>
                 <div>
-                  <p className="font-semibold text-sm">Build Release APK</p>
-                  <p className="text-xs text-slate-500">Run <code className="bg-slate-800 px-1 rounded text-pink-400">./gradlew assembleRelease</code> in Android Studio. Upload to your Storage bucket.</p>
+                  <p className="font-semibold text-sm">Enable Immersive Mode</p>
+                  <p className="text-xs text-slate-500">Launch the app, tap "Maximize", and test the lock command from your laptop.</p>
                 </div>
               </div>
             </div>
@@ -189,8 +193,3 @@ export default function ProvisioningPage() {
     </div>
   );
 }
-
-import { Badge } from '@/components/ui/badge';
-import { RefreshCw } from 'lucide-react';
-import { Alert } from '@/components/ui/alert';
-import { AlertDescription } from '@/components/ui/alert';
