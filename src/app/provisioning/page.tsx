@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Shield, QrCode, Copy, Info, Download } from 'lucide-react';
+import { Shield, QrCode, Copy, Info, Download, Smartphone } from 'lucide-react';
 
 export default function ProvisioningPage() {
   const provisioningJson = {
@@ -18,7 +18,6 @@ export default function ProvisioningPage() {
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(JSON.stringify(provisioningJson, null, 2));
-    // Toast logic would go here
   };
 
   return (
@@ -39,7 +38,6 @@ export default function ProvisioningPage() {
           </CardHeader>
           <CardContent className="flex flex-col items-center gap-6">
             <div className="p-8 bg-white rounded-2xl border-2 border-dashed border-muted flex items-center justify-center aspect-square w-64">
-              {/* This would be an actual QR code component in production */}
               <div className="relative group">
                  <QrCode size={180} className="text-primary opacity-20" />
                  <div className="absolute inset-0 flex items-center justify-center">
