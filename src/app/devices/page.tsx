@@ -7,11 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { Search, Smartphone, Lock, Unlock, Plus, MoreVertical, Loader2, ExternalLink, Phone } from 'lucide-react';
+import { Search, Smartphone, Lock, Unlock, Plus, MoreVertical, Loader2, ExternalLink, Phone, Copy } from 'lucide-react';
 import { DeviceLockDialog } from '@/components/device-lock-dialog';
 import { useCollection, useFirestore } from '@/firebase';
 import { collection, updateDoc, doc } from 'firebase/firestore';
 import Link from 'next/link';
+import { useToast } from '@/hooks/use-toast';
 
 type Device = {
   id: string;
@@ -27,6 +28,7 @@ type Device = {
 };
 
 export default function DevicesPage() {
+  const { toast } = useToast();
   const firestore = useFirestore();
   const devicesQuery = useMemo(() => firestore ? collection(firestore, 'devices') : null, [firestore]);
   const { data: devices, loading } = useCollection<Device>(devicesQuery);
@@ -53,6 +55,15 @@ export default function DevicesPage() {
     } else {
       setSelectedDevice(device);
     }
+  };
+
+  const copySimLink = (id: string) => {
+    const link = `${window.location.origin}/device-view/${id}`;
+    navigator.clipboard.writeText(link);
+    toast({
+      title: "Simulator Link Copied",
+      description: "You can now paste this on the customer's phone.",
+    });
   };
 
   return (
@@ -101,9 +112,23 @@ export default function DevicesPage() {
                       <CardDescription className="text-xs font-mono">{device.customerId || 'No ID'}</CardDescription>
                     </div>
                   </div>
-                  <Link href={`/device-view/${device.id}`} target="_blank" className="text-muted-foreground hover:text-accent p-1">
-                    <ExternalLink size={16} />
-                  </Link>
+                  <div className="flex flex-col items-end gap-1">
+                    <Link 
+                      href={`/device-view/${device.id}`} 
+                      target="_blank" 
+                      className="text-accent hover:text-accent/80 flex items-center gap-1 text-[10px] font-bold uppercase tracking-tighter"
+                    >
+                      <ExternalLink size={14} />
+                      Simulate
+                    </Link>
+                    <button 
+                      onClick={() => copySimLink(device.id)}
+                      className="text-muted-foreground hover:text-primary flex items-center gap-1 text-[9px] font-bold uppercase"
+                    >
+                      <Copy size={10} />
+                      Copy Link
+                    </button>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">

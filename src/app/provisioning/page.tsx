@@ -30,12 +30,21 @@ export default function ProvisioningPage() {
     });
   };
 
+  const copyBaseUrl = () => {
+    const baseUrl = `${window.location.origin}/device-view/[DEVICE_ID]`;
+    navigator.clipboard.writeText(baseUrl);
+    toast({
+      title: "URL Format Copied",
+      description: "Replace [DEVICE_ID] with the actual ID from the dashboard.",
+    });
+  };
+
   return (
     <div className="space-y-8 max-w-5xl mx-auto pb-12 animate-in fade-in duration-700">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <h1 className="text-4xl font-headline font-extrabold text-primary tracking-tight">Deployment Terminal</h1>
-          <p className="text-muted-foreground text-lg">Manage device enrollment and "Web App" simulation for local testing.</p>
+          <p className="text-muted-foreground text-lg">Manage device enrollment and PWA simulation for immediate field testing.</p>
         </div>
         <div className="flex gap-2">
           <Badge variant="secondary" className="h-7 px-3 bg-accent/20 text-accent border-accent/20">
@@ -54,19 +63,26 @@ export default function ProvisioningPage() {
                <div className="h-12 w-12 bg-accent rounded-xl flex items-center justify-center text-white mb-2 shadow-lg">
                   <Maximize2 size={24} />
                </div>
-               <CardTitle className="text-xl">Fast-Track: Web Enrollment</CardTitle>
-               <CardDescription>Test the lock logic immediately on any phone.</CardDescription>
+               <CardTitle className="text-xl">Fast-Track: Web Simulation</CardTitle>
+               <CardDescription>Test the lock logic immediately on any physical phone.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+               <div className="p-3 bg-white/50 rounded-lg border border-accent/20">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Simulator URL Format</p>
+                  <code className="text-xs text-accent break-all">{typeof window !== 'undefined' ? window.location.origin : ''}/device-view/[ID]</code>
+                  <Button variant="ghost" size="sm" className="h-6 mt-2 text-[9px] gap-1 px-2" onClick={copyBaseUrl}>
+                    <Copy size={10} /> Copy Format
+                  </Button>
+               </div>
                <ul className="text-sm space-y-2 text-muted-foreground">
-                  <li className="flex gap-2"><div className="h-1.5 w-1.5 rounded-full bg-accent mt-1.5 shrink-0" /> Open the Device URL on the customer's phone Chrome browser.</li>
+                  <li className="flex gap-2"><div className="h-1.5 w-1.5 rounded-full bg-accent mt-1.5 shrink-0" /> Enroll a customer and get their unique <strong>Device ID</strong>.</li>
+                  <li className="flex gap-2"><div className="h-1.5 w-1.5 rounded-full bg-accent mt-1.5 shrink-0" /> Open the link on the customer's phone Chrome browser.</li>
                   <li className="flex gap-2"><div className="h-1.5 w-1.5 rounded-full bg-accent mt-1.5 shrink-0" /> Select <strong>"Install App"</strong> or "Add to Home Screen".</li>
-                  <li className="flex gap-2"><div className="h-1.5 w-1.5 rounded-full bg-accent mt-1.5 shrink-0" /> Toggle <strong>"Full Screen"</strong> for a total lockdown simulation.</li>
                </ul>
                <Button className="w-full bg-accent hover:bg-accent/90 gap-2" asChild>
                   <a href="/devices">
                      <ExternalLink size={18} />
-                     Go to Device List
+                     Go to Managed Devices
                   </a>
                </Button>
             </CardContent>
