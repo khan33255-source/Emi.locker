@@ -25,10 +25,12 @@
         "imei": { "type": "string" },
         "model": { "type": "string" },
         "customerName": { "type": "string" },
+        "customerId": { "type": "string" },
         "status": { "type": "string", "enum": ["active", "locked", "offline"] },
         "isLocked": { "type": "boolean", "description": "Whether the remote lock is currently active" },
         "lockMessage": { "type": "string", "description": "The message displayed on the locked screen" },
         "emiAmount": { "type": "number" },
+        "emiMonths": { "type": "number" },
         "dueDate": { "type": "string", "format": "date" },
         "vendorId": { "type": "string" }
       },

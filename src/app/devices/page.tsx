@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Search, Smartphone, Lock, Unlock, Plus, MoreVertical, Loader2, ExternalLink } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Search, Smartphone, Lock, Unlock, Plus, MoreVertical, Loader2, ExternalLink, Phone } from 'lucide-react';
 import { DeviceLockDialog } from '@/components/device-lock-dialog';
 import { useCollection, useFirestore } from '@/firebase';
 import { collection, updateDoc, doc } from 'firebase/firestore';
@@ -17,6 +18,7 @@ type Device = {
   imei: string;
   model: string;
   customerName: string;
+  customerId: string;
   status: 'active' | 'locked' | 'offline';
   emiAmount: number;
   dueDate: string;
@@ -35,28 +37,36 @@ export default function DevicesPage() {
   const filteredDevices = devices?.filter(d => 
     d.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) || 
     d.model?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    d.imei?.includes(searchTerm)
+    d.imei?.includes(searchTerm) ||
+    d.customerId?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleUnlock = async (deviceId: string) => {
+  const toggleLock = async (device: Device) => {
     if (!firestore) return;
-    const deviceRef = doc(firestore, 'devices', deviceId);
-    await updateDoc(deviceRef, {
-      status: 'active',
-      isLocked: false
-    });
+    
+    if (device.isLocked) {
+      const deviceRef = doc(firestore, 'devices', device.id);
+      updateDoc(deviceRef, {
+        status: 'active',
+        isLocked: false
+      });
+    } else {
+      setSelectedDevice(device);
+    }
   };
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-headline font-bold text-primary">Managed Devices</h1>
-          <p className="text-muted-foreground">Monitor and remotely control all registered mobile devices.</p>
+          <h1 className="text-3xl font-headline font-bold text-primary">Customer Portfolio</h1>
+          <p className="text-muted-foreground">Monitor and manage remote status for your enrolled customers.</p>
         </div>
-        <Button className="bg-accent hover:bg-accent/90 gap-2">
-          <Plus size={18} />
-          Register New Device
+        <Button className="bg-accent hover:bg-accent/90 gap-2" asChild>
+          <Link href="/vendors/enroll">
+            <Plus size={18} />
+            New Enrollment
+          </Link>
         </Button>
       </div>
 
@@ -64,7 +74,7 @@ export default function DevicesPage() {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
         <Input 
           className="pl-10 h-12" 
-          placeholder="Search by Customer, IMEI or Device Model..." 
+          placeholder="Search by Customer, ID or IMEI..." 
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
@@ -77,70 +87,64 @@ export default function DevicesPage() {
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {filteredDevices?.map((device) => (
-            <Card key={device.id} className="relative overflow-hidden hover:shadow-lg transition-all group">
-              <div className={`absolute top-0 left-0 w-1 h-full ${
-                device.status === 'locked' ? 'bg-destructive' : 
-                device.status === 'active' ? 'bg-green-500' : 'bg-muted'
-              }`} />
+            <Card key={device.id} className={`relative overflow-hidden hover:shadow-lg transition-all border-l-4 ${
+              device.isLocked ? 'border-l-destructive' : 'border-l-green-500'
+            }`}>
               <CardHeader className="pb-2">
                 <div className="flex justify-between items-start">
-                  <div className="h-10 w-10 rounded-lg bg-secondary flex items-center justify-center text-primary">
-                    <Smartphone size={24} />
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-secondary flex items-center justify-center text-primary">
+                      <Smartphone size={24} />
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg font-headline">{device.customerName}</CardTitle>
+                      <CardDescription className="text-xs font-mono">{device.customerId || 'No ID'}</CardDescription>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Badge variant={device.status === 'locked' ? 'destructive' : 'secondary'} className="capitalize">
-                      {device.status}
-                    </Badge>
-                    <Link href={`/device-view/${device.id}`} target="_blank" className="text-muted-foreground hover:text-accent">
-                      <ExternalLink size={16} />
-                    </Link>
-                  </div>
+                  <Link href={`/device-view/${device.id}`} target="_blank" className="text-muted-foreground hover:text-accent p-1">
+                    <ExternalLink size={16} />
+                  </Link>
                 </div>
-                <CardTitle className="mt-4 text-lg font-headline">{device.model}</CardTitle>
-                <CardDescription className="font-mono text-xs">{device.imei}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="bg-secondary/30 p-3 rounded-lg grid grid-cols-2 gap-2 text-sm">
                   <div>
-                    <p className="text-muted-foreground text-xs uppercase font-semibold">Customer</p>
-                    <p className="font-medium">{device.customerName}</p>
+                    <p className="text-muted-foreground text-[10px] uppercase font-bold">Model</p>
+                    <p className="font-medium truncate">{device.model}</p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground text-xs uppercase font-semibold">Due Date</p>
-                    <p className="font-medium">{device.dueDate}</p>
+                    <p className="text-muted-foreground text-[10px] uppercase font-bold">EMI Due</p>
+                    <p className="font-medium">₹{device.emiAmount}</p>
                   </div>
                 </div>
                 
-                <div className="pt-4 flex gap-2">
-                  {device.status !== 'locked' ? (
-                    <Button 
-                      variant="destructive" 
-                      className="flex-1 gap-2"
-                      onClick={() => setSelectedDevice(device)}
-                    >
-                      <Lock size={16} />
-                      Remote Lock
-                    </Button>
-                  ) : (
-                    <Button 
-                      variant="outline" 
-                      className="flex-1 gap-2 border-green-500 text-green-600 hover:bg-green-50"
-                      onClick={() => handleUnlock(device.id)}
-                    >
-                      <Unlock size={16} />
-                      Unlock Device
-                    </Button>
-                  )}
-                  <Button variant="ghost" size="icon">
-                    <MoreVertical size={16} />
-                  </Button>
+                <div className="flex items-center justify-between p-2 border rounded-xl bg-white">
+                  <div className="flex items-center gap-2">
+                    {device.isLocked ? <Lock className="h-4 w-4 text-destructive" /> : <Unlock className="h-4 w-4 text-green-600" />}
+                    <span className="text-sm font-semibold">{device.isLocked ? 'Device Locked' : 'Device Active'}</span>
+                  </div>
+                  <Switch 
+                    checked={device.isLocked} 
+                    onCheckedChange={() => toggleLock(device)}
+                    className="data-[state=checked]:bg-destructive"
+                  />
+                </div>
+
+                <div className="flex gap-2">
+                   <Button variant="outline" size="sm" className="flex-1 gap-1">
+                      <Phone size={14} />
+                      Call
+                   </Button>
+                   <Button variant="ghost" size="icon" className="h-9 w-9">
+                      <MoreVertical size={16} />
+                   </Button>
                 </div>
               </CardContent>
             </Card>
           ))}
           {!filteredDevices?.length && (
             <div className="col-span-full text-center py-12 text-muted-foreground bg-secondary/20 rounded-xl border border-dashed">
-              No devices found matching your search.
+              No customers found. Start by enrolling a new device.
             </div>
           )}
         </div>

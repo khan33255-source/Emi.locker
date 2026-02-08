@@ -1,5 +1,6 @@
+
 import Link from 'next/link';
-import { Shield, Smartphone, Users, LayoutDashboard, QrCode, LogOut, Settings } from 'lucide-react';
+import { Shield, Smartphone, Users, LayoutDashboard, QrCode, LogOut, Settings, PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function DashboardLayout({
@@ -14,13 +15,14 @@ export default function DashboardLayout({
         <div className="p-6">
           <Link className="flex items-center gap-2" href="/dashboard">
             <Shield className="h-6 w-6 text-accent" />
-            <span className="font-headline font-bold text-lg">Emi.locker</span>
+            <span className="font-headline font-bold text-lg text-white">Emi.locker</span>
           </Link>
         </div>
         <nav className="flex-1 px-4 space-y-1">
           <NavItem href="/dashboard" icon={<LayoutDashboard size={20} />} label="Overview" />
           <NavItem href="/devices" icon={<Smartphone size={20} />} label="Managed Devices" />
-          <NavItem href="/admin/vendors" icon={<Users size={20} />} label="Vendors" />
+          <NavItem href="/vendors/enroll" icon={<PlusCircle size={20} />} label="Enroll Customer" />
+          <NavItem href="/admin/vendors" icon={<Users size={20} />} label="Vendors List" />
           <NavItem href="/provisioning" icon={<QrCode size={20} />} label="Provisioning" />
           <NavItem href="#" icon={<Settings size={20} />} label="Settings" />
         </nav>
@@ -40,11 +42,11 @@ export default function DashboardLayout({
           <h2 className="text-lg font-headline font-semibold text-primary">Control Center</h2>
           <div className="flex items-center gap-4">
             <div className="text-right">
-              <p className="text-sm font-medium">Super Admin</p>
-              <p className="text-xs text-muted-foreground">Main Office</p>
+              <p className="text-sm font-medium">Administrator</p>
+              <p className="text-xs text-muted-foreground">Emi.locker HQ</p>
             </div>
             <div className="h-8 w-8 rounded-full bg-accent flex items-center justify-center text-white font-bold">
-              SA
+              ADM
             </div>
           </div>
         </header>
