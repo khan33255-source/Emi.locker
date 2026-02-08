@@ -1,3 +1,22 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "hero-dashboard",
+      "description": "Dashboard visualization of mobile device management",
+      "imageUrl": "https://images.unsplash.com/photo-1632910110458-435eb54b8d9a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHx0ZWNobm9sb2d5JTIwc2VjdXJpdHl8ZW58MHx8fHwxNzcwNTYxMDQ3fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "technology security"
+    },
+    {
+      "id": "vendor-shop",
+      "description": "A modern mobile retail shop interior",
+      "imageUrl": "https://images.unsplash.com/photo-1617286647334-b63be33f40f6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxtb2JpbGUlMjBzaG9wfGVufDB8fHx8MTc3MDU2MTA0N3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "mobile shop"
+    },
+    {
+      "id": "aadhar-placeholder",
+      "description": "Placeholder for identity card upload",
+      "imageUrl": "https://images.unsplash.com/photo-1594570322022-e7026b28a6c1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxpZGVudGl0eSUyMGNhcmR8ZW58MHx8fHwxNzcwNTYxMDQ3fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "identity card"
+    }
+  ]
 }
