@@ -1,0 +1,46 @@
+{
+  "entities": {
+    "Vendor": {
+      "title": "Vendor Profile",
+      "description": "Represents a mobile shop vendor registered in the system.",
+      "type": "object",
+      "properties": {
+        "shopName": { "type": "string" },
+        "ownerName": { "type": "string" },
+        "mobile": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "pending", "suspended"] },
+        "devicesCount": { "type": "number" },
+        "joinDate": { "type": "string", "format": "date" }
+      },
+      "required": ["shopName", "ownerName", "mobile", "status"]
+    },
+    "Device": {
+      "title": "Managed Device",
+      "description": "A mobile device being tracked and managed via MDM.",
+      "type": "object",
+      "properties": {
+        "imei": { "type": "string" },
+        "model": { "type": "string" },
+        "customerName": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "locked", "offline"] },
+        "emiAmount": { "type": "number" },
+        "dueDate": { "type": "string", "format": "date" },
+        "vendorId": { "type": "string" }
+      },
+      "required": ["imei", "model", "customerName", "status", "vendorId"]
+    }
+  },
+  "auth": {
+    "providers": ["password"]
+  },
+  "firestore": {
+    "/vendors/{vendorId}": {
+      "schema": "#/entities/Vendor",
+      "description": "Collection of registered vendors/shops."
+    },
+    "/devices/{deviceId}": {
+      "schema": "#/entities/Device",
+      "description": "Collection of all managed devices across all vendors."
+    }
+  }
+}
