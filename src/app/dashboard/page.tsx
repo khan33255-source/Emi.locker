@@ -1,20 +1,71 @@
+"use client";
 
+import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Smartphone, Users, Lock, Unlock, ShieldAlert } from 'lucide-react';
+import { Smartphone, Users, Lock, Unlock, ShieldAlert, Loader2 } from 'lucide-react';
+import { useCollection, useFirestore } from '@/firebase';
+import { collection } from 'firebase/firestore';
 
 export default function DashboardPage() {
+  const firestore = useFirestore();
+  
+  const vendorsQuery = useMemo(() => firestore ? collection(firestore, 'vendors') : null, [firestore]);
+  const devicesQuery = useMemo(() => firestore ? collection(firestore, 'devices') : null, [firestore]);
+  
+  const { data: vendors, loading: loadingVendors } = useCollection<any>(vendorsQuery);
+  const { data: devices, loading: loadingDevices } = useCollection<any>(devicesQuery);
+
+  const stats = useMemo(() => {
+    if (!vendors || !devices) return null;
+    
+    return {
+      totalDevices: devices.length,
+      activeVendors: vendors.filter(v => v.status === 'active').length,
+      lockedDevices: devices.filter(d => d.status === 'locked' || d.isLocked).length,
+      pendingApprovals: vendors.filter(v => v.status === 'pending').length
+    };
+  }, [vendors, devices]);
+
+  if (loadingVendors || loadingDevices) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-accent" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div>
         <h1 className="text-3xl font-headline font-bold text-primary">System Overview</h1>
-        <p className="text-muted-foreground">Monitor real-time status of managed devices and vendor accounts.</p>
+        <p className="text-muted-foreground">Monitor real-time status of managed devices and vendor accounts across Etawah.</p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard title="Total Devices" value="1,284" icon={<Smartphone className="text-accent" />} trend="+12% from last month" />
-        <StatCard title="Active Vendors" value="48" icon={<Users className="text-accent" />} trend="+3 this week" />
-        <StatCard title="Locked Devices" value="156" icon={<Lock className="text-destructive" />} trend="12.1% of total" />
-        <StatCard title="Pending Approvals" value="5" icon={<ShieldAlert className="text-yellow-500" />} trend="Action required" />
+        <StatCard 
+          title="Total Devices" 
+          value={stats?.totalDevices.toLocaleString() || '0'} 
+          icon={<Smartphone className="text-accent" />} 
+          trend="Global managed assets" 
+        />
+        <StatCard 
+          title="Active Vendors" 
+          value={stats?.activeVendors.toLocaleString() || '0'} 
+          icon={<Users className="text-accent" />} 
+          trend="Verified mobile shops" 
+        />
+        <StatCard 
+          title="Locked Devices" 
+          value={stats?.lockedDevices.toLocaleString() || '0'} 
+          icon={<Lock className="text-destructive" />} 
+          trend={`${((stats?.lockedDevices || 0) / (stats?.totalDevices || 1) * 100).toFixed(1)}% of total`} 
+        />
+        <StatCard 
+          title="Pending Approvals" 
+          value={stats?.pendingApprovals.toLocaleString() || '0'} 
+          icon={<ShieldAlert className="text-yellow-500" />} 
+          trend="KYC review required" 
+        />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">

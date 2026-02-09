@@ -101,6 +101,9 @@ export default function Home() {
             <p className="text-sm text-primary-foreground/60 leading-relaxed">
               Etawah's leading mobile finance security solution. Empowering local retailers since 2024.
             </p>
+            <Link href="/dashboard" className="text-[10px] text-primary-foreground/20 hover:text-accent font-bold uppercase tracking-widest transition-colors mt-4 block">
+               System Admin Access
+            </Link>
           </div>
           <div>
             <h4 className="font-bold mb-4">Solution</h4>
