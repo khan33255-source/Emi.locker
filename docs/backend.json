@@ -17,6 +17,17 @@
       },
       "required": ["shopName", "ownerName", "mobile", "status"]
     },
+    "Admin": {
+      "title": "Super Admin",
+      "description": "System administrator with global oversight.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "mobile": { "type": "string" },
+        "role": { "type": "string", "enum": ["super_admin", "support"] }
+      },
+      "required": ["mobile", "role"]
+    },
     "Device": {
       "title": "Managed Device",
       "description": "A mobile device being tracked and managed via MDM.",
@@ -44,6 +55,10 @@
     "/vendors/{vendorId}": {
       "schema": "#/entities/Vendor",
       "description": "Collection of registered vendors/shops."
+    },
+    "/admins/{adminId}": {
+      "schema": "#/entities/Admin",
+      "description": "Collection of system administrators."
     },
     "/devices/{deviceId}": {
       "schema": "#/entities/Device",

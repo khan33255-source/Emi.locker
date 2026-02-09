@@ -7,12 +7,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ShieldAlert, Loader2, KeyRound, Lock } from 'lucide-react';
-import { useAuth } from '@/firebase';
+import { ShieldAlert, Loader2, KeyRound, Lock, ArrowLeft } from 'lucide-react';
+import { useAuth, useFirestore } from '@/firebase';
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
+import Link from 'next/link';
 
-const ADMIN_NUMBERS = ['+919876543210']; // Replace with actual admin number
+const ADMIN_NUMBERS = ['+918077550043', '+919876543210']; // Whitelisted superuser numbers
 
 export default function AdminLoginPage() {
   const [loading, setLoading] = useState(false);
@@ -23,6 +25,7 @@ export default function AdminLoginPage() {
   const [mounted, setMounted] = useState(false);
   
   const auth = useAuth();
+  const firestore = useFirestore();
   const { toast } = useToast();
   const router = useRouter();
 
@@ -42,33 +45,43 @@ export default function AdminLoginPage() {
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth) return;
-
-    const formattedNumber = mobile.startsWith('+') ? mobile : `+91${mobile}`;
-    
-    // In production, we check against whitelist
-    if (process.env.NODE_ENV === 'production' && !ADMIN_NUMBERS.includes(formattedNumber)) {
-      toast({
-        variant: 'destructive',
-        title: 'Access Denied',
-        description: 'This number does not have administrative privileges.',
-      });
-      return;
-    }
+    if (!auth || !firestore) return;
 
     setLoading(true);
+    const formattedNumber = mobile.startsWith('+') ? mobile : `+91${mobile}`;
+    
     try {
+      // 1. Check if number is in the Admin collection
+      const adminsRef = collection(firestore, 'admins');
+      const q = query(adminsRef, where('mobile', '==', formattedNumber));
+      const querySnapshot = await getDocs(q);
+      
+      const isRegistered = !querySnapshot.empty;
+      const isWhitelisted = ADMIN_NUMBERS.includes(formattedNumber);
+
+      if (!isRegistered && !isWhitelisted) {
+        toast({
+          variant: 'destructive',
+          title: 'Access Denied',
+          description: 'This number is not registered as a System Administrator.',
+        });
+        setLoading(false);
+        return;
+      }
+
+      // 2. Trigger Phone Auth
       const verifier = setupRecaptcha();
       const result = await signInWithPhoneNumber(auth, formattedNumber, verifier);
       setConfirmationResult(result);
       setStep('otp');
-      toast({ title: 'Admin OTP Sent' });
+      toast({ title: 'Admin OTP Sent', description: 'Enter the 6-digit verification code.' });
     } catch (error: any) {
       // Testing fallback
       if (error.code === 'auth/operation-not-allowed') {
+        toast({ title: 'Prototype Mode', description: 'Using test OTP: 123456' });
         setStep('otp');
       } else {
-        toast({ variant: 'destructive', title: 'Error', description: error.message });
+        toast({ variant: 'destructive', title: 'Auth Error', description: error.message });
       }
     } finally {
       setLoading(false);
@@ -81,14 +94,16 @@ export default function AdminLoginPage() {
     try {
       if (confirmationResult) {
         await confirmationResult.confirm(otp);
-      } else if (otp === '888888') {
-        // Admin test OTP
+      } else if (otp === '123456') {
+        // Prototype test OTP
       } else {
         throw new Error('Invalid OTP');
       }
+      
+      toast({ title: 'Authentication Verified', description: 'Access granted to Admin Terminal.' });
       router.push('/dashboard');
     } catch (error) {
-      toast({ variant: 'destructive', title: 'Verification Failed' });
+      toast({ variant: 'destructive', title: 'Verification Failed', description: 'The code entered is incorrect.' });
     } finally {
       setLoading(false);
     }
@@ -97,47 +112,61 @@ export default function AdminLoginPage() {
   if (!mounted) return null;
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center p-4">
       <div id="admin-recaptcha"></div>
-      <Card className="max-w-md w-full border-zinc-800 bg-zinc-900 text-white">
-        <CardHeader className="text-center">
-          <div className="mx-auto bg-red-500/10 w-16 h-16 rounded-2xl flex items-center justify-center mb-4 text-red-500">
-            <Lock size={32} />
-          </div>
-          <CardTitle className="text-2xl font-black italic uppercase tracking-tighter">Admin Terminal</CardTitle>
-          <CardDescription className="text-zinc-500 font-mono text-xs">RESTRICTED ACCESS AREA</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={step === 'phone' ? handleSendOtp : handleVerifyOtp} className="space-y-6">
-            {step === 'phone' ? (
-              <div className="space-y-2">
-                <Label className="text-zinc-400 text-[10px] font-bold uppercase">Superuser Mobile</Label>
-                <Input 
-                  type="tel" 
-                  className="bg-zinc-800 border-zinc-700 h-12 text-white" 
-                  placeholder="+91..."
-                  value={mobile}
-                  onChange={(e) => setMobile(e.target.value)}
-                />
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <Label className="text-zinc-400 text-[10px] font-bold uppercase">Authorization Code</Label>
-                <Input 
-                  type="text" 
-                  maxLength={6}
-                  className="bg-zinc-800 border-zinc-700 h-14 text-center text-2xl tracking-widest font-black"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                />
-              </div>
-            )}
-            <Button className="w-full h-12 bg-red-600 hover:bg-red-700 font-bold" disabled={loading}>
-              {loading ? <Loader2 className="animate-spin" /> : step === 'phone' ? 'GENERATE KEY' : 'AUTHORIZE ACCESS'}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+      
+      <div className="w-full max-w-md space-y-4">
+        <Link href="/" className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors text-sm mb-4 w-fit">
+          <ArrowLeft size={16} />
+          Back to Site
+        </Link>
+
+        <Card className="w-full border-zinc-800 bg-zinc-900 text-white shadow-2xl">
+          <CardHeader className="text-center">
+            <div className="mx-auto bg-red-500/10 w-16 h-16 rounded-2xl flex items-center justify-center mb-4 text-red-500">
+              <Lock size={32} />
+            </div>
+            <CardTitle className="text-2xl font-black italic uppercase tracking-tighter">Admin Terminal</CardTitle>
+            <CardDescription className="text-zinc-500 font-mono text-xs">RESTRICTED ACCESS AREA</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={step === 'phone' ? handleSendOtp : handleVerifyOtp} className="space-y-6">
+              {step === 'phone' ? (
+                <div className="space-y-2">
+                  <Label className="text-zinc-400 text-[10px] font-bold uppercase">Superuser Mobile</Label>
+                  <Input 
+                    type="tel" 
+                    className="bg-zinc-800 border-zinc-700 h-12 text-white placeholder:text-zinc-600" 
+                    placeholder="+91..."
+                    value={mobile}
+                    onChange={(e) => setMobile(e.target.value)}
+                  />
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label className="text-zinc-400 text-[10px] font-bold uppercase">Authorization Code</Label>
+                  <Input 
+                    type="text" 
+                    maxLength={6}
+                    className="bg-zinc-800 border-zinc-700 h-14 text-center text-3xl tracking-widest font-black text-white"
+                    placeholder="000000"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    autoFocus
+                  />
+                </div>
+              )}
+              <Button className="w-full h-12 bg-red-600 hover:bg-red-700 font-bold shadow-lg shadow-red-900/20" disabled={loading}>
+                {loading ? <Loader2 className="animate-spin" /> : step === 'phone' ? 'GENERATE KEY' : 'AUTHORIZE ACCESS'}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+        
+        <p className="text-center text-[9px] text-zinc-700 font-bold uppercase tracking-[0.3em] pt-4">
+          Encrypted Command Interface v4.2
+        </p>
+      </div>
     </div>
   );
 }
