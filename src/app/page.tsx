@@ -16,12 +16,12 @@ export default function Home() {
           <Link className="text-sm font-semibold text-muted-foreground hover:text-primary transition-colors hidden md:block" href="#features">
             Features
           </Link>
-          <Link className="text-sm font-semibold text-muted-foreground hover:text-primary transition-colors" href="/vendors/register">
+          <Link className="text-sm font-semibold text-muted-foreground hover:text-primary transition-colors" href="/vendors/login">
             Vendor Portal
           </Link>
           <div className="flex items-center gap-3">
             <Button variant="ghost" className="font-bold" asChild>
-              <Link href="/dashboard">Login</Link>
+              <Link href="/vendors/login">Login</Link>
             </Button>
             <Button className="bg-accent hover:bg-accent/90 text-white font-bold px-6 shadow-lg shadow-accent/20" asChild>
               <Link href="/vendors/register">Get Started</Link>
@@ -54,7 +54,7 @@ export default function Home() {
                 <Link href="/vendors/register">REGISTER SHOP NOW</Link>
               </Button>
               <Button size="lg" variant="outline" className="text-white border-white/20 hover:bg-white/5 h-16 px-10 text-lg rounded-2xl backdrop-blur-sm font-bold" asChild>
-                <Link href="/dashboard">ADMIN LOGIN</Link>
+                <Link href="/vendors/login">VENDOR LOGIN</Link>
               </Button>
             </div>
           </div>
@@ -86,17 +86,6 @@ export default function Home() {
                 title="Real-time Command Center"
                 description="Manage 10,000+ devices from a single dashboard. Track connectivity, lock status, and payment history instantly."
               />
-            </div>
-          </div>
-        </section>
-
-        {/* Trust Section */}
-        <section className="w-full py-20 bg-secondary/30 border-y">
-          <div className="container px-4 md:px-6 mx-auto flex flex-col items-center">
-            <div className="flex flex-wrap justify-center gap-12 opacity-50 grayscale hover:grayscale-0 transition-all">
-               <div className="flex items-center gap-2 font-black text-xl"><Shield /> TRUSTED TECH</div>
-               <div className="flex items-center gap-2 font-black text-xl"><Smartphone /> MDM READY</div>
-               <div className="flex items-center gap-2 font-black text-xl"><Zap /> ETAWAH FIRST</div>
             </div>
           </div>
         </section>
