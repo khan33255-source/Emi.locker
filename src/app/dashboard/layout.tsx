@@ -1,13 +1,52 @@
 
+"use client";
+
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Shield, Smartphone, Users, LayoutDashboard, QrCode, LogOut, Settings, PlusCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Shield, Smartphone, Users, LayoutDashboard, QrCode, LogOut, Settings, PlusCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useUser, useAuth } from '@/firebase';
+import { signOut } from 'firebase/auth';
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { user, loading } = useUser();
+  const auth = useAuth();
+  const router = useRouter();
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (isMounted && !loading && !user) {
+      router.push('/vendors/login');
+    }
+  }, [user, loading, isMounted, router]);
+
+  const handleSignOut = async () => {
+    if (auth) {
+      await signOut(auth);
+      router.push('/');
+    }
+  };
+
+  if (!isMounted || loading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background">
+        <Loader2 className="h-10 w-10 animate-spin text-accent" />
+        <p className="mt-4 text-sm font-medium text-muted-foreground">Authenticating session...</p>
+      </div>
+    );
+  }
+
+  if (!user) return null;
+
   return (
     <div className="flex min-h-screen bg-background font-body">
       {/* Sidebar */}
@@ -27,11 +66,13 @@ export default function DashboardLayout({
           <NavItem href="#" icon={<Settings size={20} />} label="Settings" />
         </nav>
         <div className="p-4 border-t border-white/10">
-          <Button variant="ghost" className="w-full justify-start gap-2 hover:bg-white/10 text-primary-foreground/70 hover:text-white" asChild>
-            <Link href="/">
-              <LogOut size={20} />
-              Sign Out
-            </Link>
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start gap-2 hover:bg-white/10 text-primary-foreground/70 hover:text-white"
+            onClick={handleSignOut}
+          >
+            <LogOut size={20} />
+            Sign Out
           </Button>
         </div>
       </aside>
@@ -42,11 +83,11 @@ export default function DashboardLayout({
           <h2 className="text-lg font-headline font-semibold text-primary">Control Center</h2>
           <div className="flex items-center gap-4">
             <div className="text-right">
-              <p className="text-sm font-medium">Administrator</p>
-              <p className="text-xs text-muted-foreground">Emi.locker HQ</p>
+              <p className="text-sm font-medium">{user.phoneNumber || 'Administrator'}</p>
+              <p className="text-xs text-muted-foreground">Authorized Session</p>
             </div>
             <div className="h-8 w-8 rounded-full bg-accent flex items-center justify-center text-white font-bold">
-              ADM
+              {user.phoneNumber?.slice(-2) || 'AD'}
             </div>
           </div>
         </header>

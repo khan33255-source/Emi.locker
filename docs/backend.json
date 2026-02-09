@@ -38,7 +38,7 @@
     }
   },
   "auth": {
-    "providers": ["password"]
+    "providers": ["phone"]
   },
   "firestore": {
     "/vendors/{vendorId}": {
