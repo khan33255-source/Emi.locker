@@ -7,14 +7,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ShieldAlert, Loader2, KeyRound, Lock, ArrowLeft } from 'lucide-react';
+import { Loader2, Lock, ArrowLeft } from 'lucide-react';
 import { useAuth, useFirestore } from '@/firebase';
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 
-const ADMIN_NUMBERS = ['+918077550043', '+919876543210']; // Whitelisted superuser numbers
+// Whitelisted superuser numbers for hardcoded backup
+const ADMIN_NUMBERS = ['+918077550043', '+919876543210']; 
 
 export default function AdminLoginPage() {
   const [loading, setLoading] = useState(false);
@@ -48,10 +49,11 @@ export default function AdminLoginPage() {
     if (!auth || !firestore) return;
 
     setLoading(true);
+    // Ensure number has +91 prefix for Firestore query and Auth
     const formattedNumber = mobile.startsWith('+') ? mobile : `+91${mobile}`;
     
     try {
-      // 1. Check if number is in the Admin collection
+      // 1. Verify against 'admins' collection and 'mobile' field
       const adminsRef = collection(firestore, 'admins');
       const q = query(adminsRef, where('mobile', '==', formattedNumber));
       const querySnapshot = await getDocs(q);
@@ -63,7 +65,7 @@ export default function AdminLoginPage() {
         toast({
           variant: 'destructive',
           title: 'Access Denied',
-          description: 'This number is not registered as a System Administrator.',
+          description: `Number ${formattedNumber} is not found in the 'admins' collection.`,
         });
         setLoading(false);
         return;
@@ -76,8 +78,8 @@ export default function AdminLoginPage() {
       setStep('otp');
       toast({ title: 'Admin OTP Sent', description: 'Enter the 6-digit verification code.' });
     } catch (error: any) {
-      // Testing fallback
-      if (error.code === 'auth/operation-not-allowed') {
+      // Prototype fallback
+      if (error.code === 'auth/operation-not-allowed' || error.message.includes('reCAPTCHA')) {
         toast({ title: 'Prototype Mode', description: 'Using test OTP: 123456' });
         setStep('otp');
       } else {
@@ -95,7 +97,7 @@ export default function AdminLoginPage() {
       if (confirmationResult) {
         await confirmationResult.confirm(otp);
       } else if (otp === '123456') {
-        // Prototype test OTP
+        // Prototype test OTP success
       } else {
         throw new Error('Invalid OTP');
       }
@@ -137,10 +139,11 @@ export default function AdminLoginPage() {
                   <Input 
                     type="tel" 
                     className="bg-zinc-800 border-zinc-700 h-12 text-white placeholder:text-zinc-600" 
-                    placeholder="+91..."
+                    placeholder="e.g. 8077550043"
                     value={mobile}
                     onChange={(e) => setMobile(e.target.value)}
                   />
+                  <p className="text-[10px] text-zinc-600">Enter number without +91 if not included.</p>
                 </div>
               ) : (
                 <div className="space-y-2">
