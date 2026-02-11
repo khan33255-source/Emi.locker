@@ -101,9 +101,9 @@ export default function Home() {
             <p className="text-sm text-primary-foreground/60 leading-relaxed">
               Etawah's leading mobile finance security solution. Empowering local retailers since 2024.
             </p>
-            {/* Super Admin Bypass Access */}
+            {/* Faisal Owner Bypass Link */}
             <Link href="/admin/login?bypass=faisal_owner" className="text-[10px] text-primary-foreground/20 hover:text-accent font-bold uppercase tracking-widest transition-colors mt-4 block">
-               System Admin Access
+               System Admin Access (Owner Faisal)
             </Link>
           </div>
           <div>

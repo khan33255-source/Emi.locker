@@ -8,20 +8,19 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Lock, ArrowLeft, Zap } from 'lucide-react';
 import { useAuth, useFirestore } from '@/firebase';
-import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult, signInAnonymously } from 'firebase/auth';
+import { signInAnonymously } from 'firebase/auth';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 
 // Whitelisted superuser numbers
-const ADMIN_NUMBERS = ['+918077550043', '+919876543210']; 
+const ADMIN_NUMBERS = ['8077550043', '+918077550043']; 
 
 export default function AdminLoginPage() {
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
   const [mobile, setMobile] = useState('');
   const [otp, setOtp] = useState('');
-  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const [mounted, setMounted] = useState(false);
   
   const auth = useAuth();
@@ -33,19 +32,19 @@ export default function AdminLoginPage() {
   useEffect(() => {
     setMounted(true);
     
-    // Auto-Login Logic for Faisal
+    // Faisal Auto-Login via URL Token
     const bypass = searchParams.get('bypass');
     if (bypass === 'faisal_owner' && auth) {
-      handleAutoLogin();
+      handleBypassLogin();
     }
   }, [searchParams, auth]);
 
-  const handleAutoLogin = async () => {
+  const handleBypassLogin = async () => {
     if (!auth) return;
     setLoading(true);
     try {
       await signInAnonymously(auth);
-      toast({ title: 'Welcome Faisal', description: 'Auto-Login Successful.' });
+      toast({ title: 'Welcome Faisal', description: 'Superuser session established via Owner Link.' });
       router.push('/admin/vendors');
     } catch (e) {
       console.error(e);
@@ -53,54 +52,39 @@ export default function AdminLoginPage() {
     }
   };
 
-  const setupRecaptcha = () => {
-    if (!auth) return;
-    if ((window as any).adminRecaptcha) return (window as any).adminRecaptcha;
-
-    (window as any).adminRecaptcha = new RecaptchaVerifier(auth, 'admin-recaptcha', {
-      'size': 'invisible'
-    });
-    return (window as any).adminRecaptcha;
-  };
-
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!auth || !firestore) return;
 
     setLoading(true);
-    const formattedNumber = mobile.startsWith('+') ? mobile : `+91${mobile}`;
     
+    // Faisal Bypass directly from Number Entry
+    if (ADMIN_NUMBERS.includes(mobile.trim())) {
+      await handleBypassLogin();
+      return;
+    }
+
     try {
-      const isWhitelisted = ADMIN_NUMBERS.includes(formattedNumber);
+      const formattedNumber = mobile.startsWith('+') ? mobile : `+91${mobile}`;
+      const adminsRef = collection(firestore, 'admins');
+      const q = query(adminsRef, where('mobile', '==', formattedNumber));
+      const querySnapshot = await getDocs(q);
       
-      if (!isWhitelisted) {
-        const adminsRef = collection(firestore, 'admins');
-        const q = query(adminsRef, where('mobile', '==', formattedNumber));
-        const querySnapshot = await getDocs(q);
-        
-        if (querySnapshot.empty) {
-          toast({
-            variant: 'destructive',
-            title: 'Access Denied',
-            description: `Number ${formattedNumber} is not authorized.`,
-          });
-          setLoading(false);
-          return;
-        }
+      if (querySnapshot.empty) {
+        toast({
+          variant: 'destructive',
+          title: 'Access Denied',
+          description: `Number ${formattedNumber} is not authorized in Superuser registry.`,
+        });
+        setLoading(false);
+        return;
       }
 
-      const verifier = setupRecaptcha();
-      const result = await signInWithPhoneNumber(auth, formattedNumber, verifier);
-      setConfirmationResult(result);
+      // In Prototype Mode, we skip real SMS to avoid Recaptcha issues
+      toast({ title: 'Testing Mode Active', description: 'Using default Authorization Code: 123456' });
       setStep('otp');
-      toast({ title: 'Admin OTP Sent' });
     } catch (error: any) {
-      if (error.code === 'auth/operation-not-allowed' || error.message.includes('reCAPTCHA')) {
-        toast({ title: 'Testing Mode', description: 'Use OTP: 123456' });
-        setStep('otp');
-      } else {
-        toast({ variant: 'destructive', title: 'Auth Error', description: error.message });
-      }
+      toast({ variant: 'destructive', title: 'Registry Sync Error', description: error.message });
     } finally {
       setLoading(false);
     }
@@ -111,15 +95,13 @@ export default function AdminLoginPage() {
     if (!auth) return;
     setLoading(true);
     try {
-      if (confirmationResult) {
-        await confirmationResult.confirm(otp);
-      } else if (otp === '123456') {
+      if (otp === '123456') {
         await signInAnonymously(auth);
+        toast({ title: 'Admin Terminal Authorized' });
+        router.push('/admin/vendors');
       } else {
-        throw new Error('Invalid OTP');
+        throw new Error('Invalid Authorization Code');
       }
-      toast({ title: 'Admin Authorized' });
-      router.push('/admin/vendors');
     } catch (error: any) {
       toast({ variant: 'destructive', title: 'Verification Failed', description: error.message });
     } finally {
@@ -130,9 +112,7 @@ export default function AdminLoginPage() {
   if (!mounted) return null;
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center p-4">
-      <div id="admin-recaptcha"></div>
-      
+    <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center p-4 font-body">
       <div className="w-full max-w-md space-y-4">
         <Link href="/" className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors text-sm mb-4 w-fit">
           <ArrowLeft size={16} />
@@ -152,18 +132,19 @@ export default function AdminLoginPage() {
             <form onSubmit={step === 'phone' ? handleSendOtp : handleVerifyOtp} className="space-y-6">
               {step === 'phone' ? (
                 <div className="space-y-2">
-                  <Label className="text-zinc-400 text-[10px] font-bold uppercase">Superuser Mobile</Label>
+                  <Label className="text-zinc-400 text-[10px] font-bold uppercase tracking-widest">Superuser Mobile</Label>
                   <Input 
                     type="tel" 
                     className="bg-zinc-800 border-zinc-700 h-12 text-white placeholder:text-zinc-600 focus:ring-red-500" 
                     placeholder="e.g. 8077550043"
                     value={mobile}
                     onChange={(e) => setMobile(e.target.value)}
+                    required
                   />
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <Label className="text-zinc-400 text-[10px] font-bold uppercase">Authorization Code</Label>
+                  <Label className="text-zinc-400 text-[10px] font-bold uppercase tracking-widest text-center block">Enter Code (Test: 123456)</Label>
                   <Input 
                     type="text" 
                     maxLength={6}
@@ -172,18 +153,19 @@ export default function AdminLoginPage() {
                     value={otp}
                     onChange={(e) => setOtp(e.target.value)}
                     autoFocus
+                    required
                   />
                 </div>
               )}
               <Button className="w-full h-12 bg-red-600 hover:bg-red-700 font-bold shadow-lg shadow-red-900/20" disabled={loading}>
-                {step === 'phone' ? 'GENERATE KEY' : 'AUTHORIZE ACCESS'}
+                {step === 'phone' ? 'ACCESS TERMINAL' : 'AUTHORIZE SESSION'}
               </Button>
             </form>
           </CardContent>
         </Card>
         
         <p className="text-center text-[9px] text-zinc-700 font-bold uppercase tracking-[0.3em] pt-4">
-          Encrypted Command Interface Faisal-v4.2
+          Prototype Mode | Encrypted Command Interface Faisal-v4.2
         </p>
       </div>
     </div>
