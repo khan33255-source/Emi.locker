@@ -1,9 +1,8 @@
-
 "use client";
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Shield, Smartphone, Users, LayoutDashboard, QrCode, LogOut, Settings, PlusCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUser, useAuth } from '@/firebase';
@@ -17,23 +16,27 @@ export default function DashboardLayout({
   const { user, loading } = useUser();
   const auth = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // Use a slight delay or additional check to ensure Firebase Auth has settled
   useEffect(() => {
     if (isMounted && !loading && !user) {
-      // Check if we are currently on the dashboard path
-      // Only redirect if NOT on an admin management route
-      const is_admin_path = window.location.pathname.startsWith('/admin');
-      if (window.location.pathname.startsWith('/dashboard') && !is_admin_path) {
+      // Check if we are on a protected route
+      const isAdminPath = pathname.startsWith('/admin');
+      const isDashboardPath = pathname.startsWith('/dashboard') || pathname.startsWith('/devices') || pathname.startsWith('/provisioning');
+      
+      if (isDashboardPath && !isAdminPath) {
         router.replace('/vendors/login');
+      } else if (isAdminPath && pathname !== '/admin/login') {
+        // Only redirect to login if NOT already on login page
+        router.replace('/admin/login');
       }
     }
-  }, [user, loading, isMounted, router]);
+  }, [user, loading, isMounted, router, pathname]);
 
   const handleSignOut = async () => {
     if (auth) {
@@ -53,6 +56,8 @@ export default function DashboardLayout({
 
   // If we have a user, render. If not, the useEffect above will handle the redirect.
   if (!user && !loading) return null;
+
+  const isAdmin = pathname.startsWith('/admin');
 
   return (
     <div className="flex min-h-screen bg-background font-body">
@@ -87,14 +92,16 @@ export default function DashboardLayout({
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         <header className="h-16 bg-white border-b flex items-center justify-between px-8">
-          <h2 className="text-lg font-headline font-semibold text-primary">Control Center</h2>
+          <h2 className="text-lg font-headline font-semibold text-primary">
+            {isAdmin ? 'System Admin Terminal' : 'Control Center'}
+          </h2>
           <div className="flex items-center gap-4">
             <div className="text-right">
-              <p className="text-sm font-medium">{user?.phoneNumber || 'Faisal'}</p>
-              <p className="text-xs text-muted-foreground">Authorized Superuser</p>
+              <p className="text-sm font-medium">{user?.phoneNumber || user?.email || 'Authenticated User'}</p>
+              <p className="text-xs text-muted-foreground">{isAdmin ? 'Superuser' : 'Verified Vendor'}</p>
             </div>
             <div className="h-8 w-8 rounded-full bg-accent flex items-center justify-center text-white font-bold">
-              FA
+              {isAdmin ? 'SA' : 'VN'}
             </div>
           </div>
         </header>
@@ -107,10 +114,17 @@ export default function DashboardLayout({
 }
 
 function NavItem({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) {
+  const pathname = usePathname();
+  const isActive = pathname === href;
+
   return (
     <Link
       href={href}
-      className="flex items-center gap-3 px-4 py-3 rounded-lg text-primary-foreground/70 hover:text-white hover:bg-white/10 transition-colors"
+      className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+        isActive 
+          ? 'bg-white/10 text-white' 
+          : 'text-primary-foreground/70 hover:text-white hover:bg-white/5'
+      }`}
     >
       {icon}
       <span className="text-sm font-medium">{label}</span>
