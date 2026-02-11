@@ -23,9 +23,13 @@ export default function DashboardLayout({
     setIsMounted(true);
   }, []);
 
+  // Use a slight delay or additional check to ensure Firebase Auth has settled
   useEffect(() => {
     if (isMounted && !loading && !user) {
-      router.push('/vendors/login');
+      // Check if we are currently on the dashboard path
+      if (window.location.pathname.startsWith('/dashboard')) {
+        router.replace('/vendors/login');
+      }
     }
   }, [user, loading, isMounted, router]);
 
@@ -36,16 +40,18 @@ export default function DashboardLayout({
     }
   };
 
-  if (!isMounted || loading) {
+  if (!isMounted || (loading && !user)) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background">
         <Loader2 className="h-10 w-10 animate-spin text-accent" />
-        <p className="mt-4 text-sm font-medium text-muted-foreground">Authenticating session...</p>
+        <p className="mt-4 text-sm font-medium text-muted-foreground">Synchronizing Authorization...</p>
       </div>
     );
   }
 
-  if (!user) return null;
+  // If we have a user, render. If not, the useEffect above will handle the redirect.
+  // We don't block rendering if user exists even if loading is true (re-auth)
+  if (!user && !loading) return null;
 
   return (
     <div className="flex min-h-screen bg-background font-body">
@@ -83,11 +89,11 @@ export default function DashboardLayout({
           <h2 className="text-lg font-headline font-semibold text-primary">Control Center</h2>
           <div className="flex items-center gap-4">
             <div className="text-right">
-              <p className="text-sm font-medium">{user.phoneNumber || 'Administrator'}</p>
-              <p className="text-xs text-muted-foreground">Authorized Session</p>
+              <p className="text-sm font-medium">{user?.phoneNumber || 'Faisal'}</p>
+              <p className="text-xs text-muted-foreground">Authorized Superuser</p>
             </div>
             <div className="h-8 w-8 rounded-full bg-accent flex items-center justify-center text-white font-bold">
-              {user.phoneNumber?.slice(-2) || 'AD'}
+              FA
             </div>
           </div>
         </header>

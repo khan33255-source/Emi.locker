@@ -49,26 +49,28 @@ export default function AdminLoginPage() {
     if (!auth || !firestore) return;
 
     setLoading(true);
-    // Ensure number has +91 prefix for Firestore query and Auth
+    // Normalize number
     const formattedNumber = mobile.startsWith('+') ? mobile : `+91${mobile}`;
     
     try {
-      // 1. Verify against 'admins' collection and 'mobile' field
-      const adminsRef = collection(firestore, 'admins');
-      const q = query(adminsRef, where('mobile', '==', formattedNumber));
-      const querySnapshot = await getDocs(q);
-      
-      const isRegistered = !querySnapshot.empty;
+      // 1. Check Whitelist first
       const isWhitelisted = ADMIN_NUMBERS.includes(formattedNumber);
-
-      if (!isRegistered && !isWhitelisted) {
-        toast({
-          variant: 'destructive',
-          title: 'Access Denied',
-          description: `Number ${formattedNumber} is not found in the 'admins' collection.`,
-        });
-        setLoading(false);
-        return;
+      
+      if (!isWhitelisted) {
+        // Only if not whitelisted, check Firestore
+        const adminsRef = collection(firestore, 'admins');
+        const q = query(adminsRef, where('mobile', '==', formattedNumber));
+        const querySnapshot = await getDocs(q);
+        
+        if (querySnapshot.empty) {
+          toast({
+            variant: 'destructive',
+            title: 'Access Denied',
+            description: `Number ${formattedNumber} is not authorized for Admin access.`,
+          });
+          setLoading(false);
+          return;
+        }
       }
 
       // 2. Trigger Phone Auth
@@ -98,13 +100,15 @@ export default function AdminLoginPage() {
       if (confirmationResult) {
         await confirmationResult.confirm(otp);
       } else if (otp === '123456') {
-        // Prototype test OTP success: Create an actual session so layouts don't redirect
+        // Prototype test OTP success: Create session
         await signInAnonymously(auth);
       } else {
         throw new Error('Invalid OTP');
       }
       
-      toast({ title: 'Authentication Verified', description: 'Access granted to Admin Terminal.' });
+      toast({ title: 'Admin Authorized', description: 'Welcome back, Faisal.' });
+      
+      // Use window.location for hard reset if router is being difficult
       router.push('/dashboard');
     } catch (error: any) {
       toast({ variant: 'destructive', title: 'Verification Failed', description: error.message || 'The code entered is incorrect.' });
