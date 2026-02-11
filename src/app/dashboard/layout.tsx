@@ -27,7 +27,9 @@ export default function DashboardLayout({
   useEffect(() => {
     if (isMounted && !loading && !user) {
       // Check if we are currently on the dashboard path
-      if (window.location.pathname.startsWith('/dashboard')) {
+      // Only redirect if NOT on an admin management route
+      const is_admin_path = window.location.pathname.startsWith('/admin');
+      if (window.location.pathname.startsWith('/dashboard') && !is_admin_path) {
         router.replace('/vendors/login');
       }
     }
@@ -50,7 +52,6 @@ export default function DashboardLayout({
   }
 
   // If we have a user, render. If not, the useEffect above will handle the redirect.
-  // We don't block rendering if user exists even if loading is true (re-auth)
   if (!user && !loading) return null;
 
   return (

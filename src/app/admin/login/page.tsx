@@ -108,8 +108,8 @@ export default function AdminLoginPage() {
       
       toast({ title: 'Admin Authorized', description: 'Welcome back, Faisal.' });
       
-      // Use window.location for hard reset if router is being difficult
-      router.push('/dashboard');
+      // Redirect directly to the requested management screen
+      router.push('/admin/vendors');
     } catch (error: any) {
       toast({ variant: 'destructive', title: 'Verification Failed', description: error.message || 'The code entered is incorrect.' });
     } finally {
