@@ -8,10 +8,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Shield, ArrowLeft, Loader2, Phone, KeyRound, CheckCircle2 } from 'lucide-react';
+import { Shield, ArrowLeft, Loader2, Phone, KeyRound } from 'lucide-react';
 import { useAuth, useFirestore } from '@/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
-import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
+import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult, signInAnonymously } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 
 export default function VendorLoginPage() {
@@ -79,10 +79,10 @@ export default function VendorLoginPage() {
     } catch (error: any) {
       console.error('OTP Error:', error);
       // Fallback for testing mode
-      if (error.code === 'auth/operation-not-allowed') {
+      if (error.code === 'auth/operation-not-allowed' || error.message.includes('reCAPTCHA')) {
         toast({
           title: 'Testing Mode Active',
-          description: 'SMS not enabled. Using mock OTP: 123456',
+          description: 'Using mock OTP: 123456',
         });
         setStep('otp');
       } else {
@@ -99,16 +99,17 @@ export default function VendorLoginPage() {
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!auth) return;
     setLoading(true);
 
     try {
       if (confirmationResult) {
         await confirmationResult.confirm(otp);
       } else if (otp === '123456') {
-        // Mock verification for testing
-        console.log('Mock OTP verified');
+        // Mock verification: Create an actual session so layouts don't redirect
+        await signInAnonymously(auth);
       } else {
-        throw new Error('Invalid verification result');
+        throw new Error('Invalid OTP');
       }
 
       toast({
@@ -120,7 +121,7 @@ export default function VendorLoginPage() {
       toast({
         variant: 'destructive',
         title: 'Invalid OTP',
-        description: 'The code you entered is incorrect.',
+        description: error.message || 'The code you entered is incorrect.',
       });
     } finally {
       setLoading(false);

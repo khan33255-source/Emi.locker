@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Lock, ArrowLeft } from 'lucide-react';
 import { useAuth, useFirestore } from '@/firebase';
-import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
+import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult, signInAnonymously } from 'firebase/auth';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
@@ -92,20 +92,22 @@ export default function AdminLoginPage() {
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!auth) return;
     setLoading(true);
     try {
       if (confirmationResult) {
         await confirmationResult.confirm(otp);
       } else if (otp === '123456') {
-        // Prototype test OTP success
+        // Prototype test OTP success: Create an actual session so layouts don't redirect
+        await signInAnonymously(auth);
       } else {
         throw new Error('Invalid OTP');
       }
       
       toast({ title: 'Authentication Verified', description: 'Access granted to Admin Terminal.' });
       router.push('/dashboard');
-    } catch (error) {
-      toast({ variant: 'destructive', title: 'Verification Failed', description: 'The code entered is incorrect.' });
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: 'Verification Failed', description: error.message || 'The code entered is incorrect.' });
     } finally {
       setLoading(false);
     }
