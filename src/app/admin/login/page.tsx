@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Lock, ArrowLeft, Zap } from 'lucide-react';
+import { Loader2, Lock, ArrowLeft } from 'lucide-react';
 import { useAuth, useFirestore } from '@/firebase';
 import { signInAnonymously } from 'firebase/auth';
 import { collection, query, where, getDocs } from 'firebase/firestore';
@@ -44,10 +44,10 @@ export default function AdminLoginPage() {
     setLoading(true);
     try {
       await signInAnonymously(auth);
-      toast({ title: 'Welcome Faisal', description: 'Superuser session established via Owner Link.' });
+      toast({ title: 'Owner Access Granted', description: 'Welcome Faisal. Terminal authorized.' });
       router.push('/admin/vendors');
     } catch (e) {
-      console.error(e);
+      console.error('Bypass error:', e);
       setLoading(false);
     }
   };
@@ -80,8 +80,7 @@ export default function AdminLoginPage() {
         return;
       }
 
-      // In Prototype Mode, we skip real SMS to avoid Recaptcha issues
-      toast({ title: 'Testing Mode Active', description: 'Using default Authorization Code: 123456' });
+      toast({ title: 'Prototype Mode', description: 'Enter code 123456 to authorize.' });
       setStep('otp');
     } catch (error: any) {
       toast({ variant: 'destructive', title: 'Registry Sync Error', description: error.message });

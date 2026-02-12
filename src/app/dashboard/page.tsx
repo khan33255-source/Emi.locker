@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useMemo } from 'react';
@@ -12,7 +11,13 @@ export default function DashboardPage() {
   const firestore = useFirestore();
   
   // Faisal (Super Admin) identification logic
-  const isAdmin = user?.phoneNumber === '8077550043' || user?.phoneNumber === '+918077550043';
+  // He can be identified by number or by anonymous status if using the Faisal bypass
+  const isAdmin = useMemo(() => {
+    if (!user) return false;
+    const isFaisalNumber = user.phoneNumber === '8077550043' || user.phoneNumber === '+918077550043';
+    // In this prototype, an anonymous user is Faisal using the bypass
+    return isFaisalNumber || user.isAnonymous;
+  }, [user]);
   
   // Faisal sees all vendors, vendors see nothing in the vendor collection
   const vendorsQuery = useMemo(() => {
@@ -70,7 +75,7 @@ export default function DashboardPage() {
            <div className="h-3 w-3 rounded-full bg-emerald-500 animate-pulse" />
            <div className="text-xs">
               <p className="font-black uppercase tracking-widest text-[9px] opacity-50">Authorized Session</p>
-              <p className="font-bold">{user?.phoneNumber || 'Faisal Admin'}</p>
+              <p className="font-bold">{user?.phoneNumber || (isAdmin ? 'Faisal (Owner)' : 'Verified Vendor')}</p>
            </div>
         </div>
       </div>
