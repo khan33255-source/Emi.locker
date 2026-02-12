@@ -1,30 +1,31 @@
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Shield, Smartphone, Lock, UserCheck, BarChart3, Cloud, CheckCircle2, Globe, Zap } from 'lucide-react';
+import { Shield, Smartphone, Lock, UserCheck, BarChart3, Cloud, CheckCircle2, Globe, Zap, ShieldCheck, ArrowRight } from 'lucide-react';
 
 export default function Home() {
   return (
-    <div className="flex flex-col min-h-screen font-body selection:bg-accent/30">
-      <header className="px-6 h-20 flex items-center border-b bg-background/95 backdrop-blur sticky top-0 z-50">
-        <Link className="flex items-center justify-center gap-2.5" href="/">
-          <div className="bg-primary p-1.5 rounded-lg">
-            <Shield className="h-6 w-6 text-accent" />
+    <div className="flex flex-col min-h-screen font-body selection:bg-accent/30 bg-slate-50">
+      <header className="px-8 h-24 flex items-center border-b bg-white/80 backdrop-blur-xl sticky top-0 z-50">
+        <Link className="flex items-center justify-center gap-3" href="/">
+          <div className="bg-primary p-2 rounded-2xl shadow-lg shadow-primary/20">
+            <Shield className="h-7 w-7 text-accent" />
           </div>
-          <span className="font-headline font-extrabold text-2xl tracking-tighter text-primary">Emi.locker</span>
+          <div className="flex flex-col">
+            <span className="font-headline font-black text-3xl tracking-tighter text-primary leading-none italic uppercase">Emi.locker</span>
+            <span className="text-[9px] font-black uppercase tracking-[0.3em] text-accent mt-1">MDM SOLUTIONS</span>
+          </div>
         </Link>
-        <nav className="ml-auto flex gap-8 items-center">
-          <Link className="text-sm font-semibold text-muted-foreground hover:text-primary transition-colors hidden md:block" href="#features">
-            Features
+        <nav className="ml-auto flex gap-10 items-center">
+          <Link className="text-xs font-black uppercase tracking-widest text-slate-400 hover:text-primary transition-colors hidden md:block" href="#features">
+            Protocols
           </Link>
-          <Link className="text-sm font-semibold text-muted-foreground hover:text-primary transition-colors" href="/vendors/login">
-            Vendor Portal
-          </Link>
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" className="font-bold" asChild>
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" className="font-black text-xs uppercase tracking-widest text-primary hover:bg-slate-100 px-6 rounded-xl" asChild>
               <Link href="/vendors/login">Login</Link>
             </Button>
-            <Button className="bg-accent hover:bg-accent/90 text-white font-bold px-6 shadow-lg shadow-accent/20" asChild>
-              <Link href="/vendors/register">Get Started</Link>
+            <Button className="bg-primary hover:bg-primary/90 text-white font-black text-xs uppercase tracking-widest px-8 h-12 rounded-xl shadow-2xl shadow-primary/30" asChild>
+              <Link href="/vendors/register">Register Shop</Link>
             </Button>
           </div>
         </nav>
@@ -32,118 +33,148 @@ export default function Home() {
       
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative w-full py-24 md:py-32 lg:py-40 bg-slate-950 overflow-hidden">
-          <div className="absolute inset-0 bg-[url('https://picsum.photos/seed/tech/1920/1080')] opacity-10 grayscale" />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-slate-950/80" />
+        <section className="relative w-full py-32 md:py-48 overflow-hidden bg-primary">
+          {/* Background Design Elements */}
+          <div className="absolute inset-0 bg-gradient-to-br from-primary via-slate-900 to-black" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-accent/20 rounded-full blur-[120px] opacity-30" />
           
-          <div className="container relative px-4 md:px-6 mx-auto text-center">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 border border-accent/20 text-accent text-xs font-bold uppercase tracking-widest mb-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-              <Zap size={14} />
-              The #1 Choice for Mobile Finance in Etawah
+          <div className="container relative px-8 mx-auto text-center">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-accent text-[10px] font-black uppercase tracking-[0.3em] mb-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+              <ShieldCheck size={16} />
+              Multi-Vendor EMI Enforcement Terminal
             </div>
-            <h1 className="text-5xl md:text-7xl font-headline font-black tracking-tighter text-white mb-6 animate-in fade-in slide-in-from-bottom-6 duration-1000">
-              Secure Your Assets. <br />
-              <span className="text-accent italic">Maximize Collections.</span>
+            <h1 className="text-6xl md:text-9xl font-headline font-black tracking-tighter text-white mb-8 animate-in fade-in slide-in-from-bottom-6 duration-1000 uppercase italic">
+              ZERO CREDIT <br />
+              <span className="text-accent underline underline-offset-8 decoration-white/10">DEFAULTS.</span>
             </h1>
-            <p className="mx-auto max-w-[800px] text-slate-400 text-lg md:text-xl mb-12 animate-in fade-in slide-in-from-bottom-8 duration-1000">
-              Emi.locker provides enterprise-grade MDM solutions for mobile retailers. 
-              Reduce default rates by up to 90% with automated remote locking and persistent device control.
+            <p className="mx-auto max-w-[800px] text-slate-400 text-lg md:text-2xl mb-16 animate-in fade-in slide-in-from-bottom-8 duration-1000 leading-relaxed font-medium">
+              Enterprise-grade MDM for Etawah's mobile retail ecosystem. 
+              <br className="hidden md:block"/>
+              Automated IMEI tracking, remote persistence, and intelligent lock protocols.
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-in fade-in slide-in-from-bottom-10 duration-1000">
-              <Button size="lg" className="bg-accent text-white hover:bg-accent/90 px-10 h-16 text-lg rounded-2xl shadow-xl shadow-accent/20 font-black" asChild>
-                <Link href="/vendors/register">REGISTER SHOP NOW</Link>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-6 animate-in fade-in slide-in-from-bottom-10 duration-1000">
+              <Button size="lg" className="bg-accent text-white hover:bg-accent/90 px-12 h-20 text-xl rounded-2xl shadow-2xl shadow-accent/40 font-black italic tracking-tighter" asChild>
+                <Link href="/vendors/register">GET STARTED <ArrowRight className="ml-2" /></Link>
               </Button>
-              <Button size="lg" variant="outline" className="text-white border-white/20 hover:bg-white/5 h-16 px-10 text-lg rounded-2xl backdrop-blur-sm font-bold" asChild>
-                <Link href="/vendors/login">VENDOR LOGIN</Link>
+              <Button size="lg" variant="outline" className="text-white border-white/20 hover:bg-white/10 h-20 px-12 text-xl rounded-2xl backdrop-blur-xl font-black italic tracking-tighter" asChild>
+                <Link href="/vendors/login">VENDOR PORTAL</Link>
               </Button>
             </div>
           </div>
         </section>
         
+        {/* Statistics Bar */}
+        <section className="bg-white border-b border-slate-200">
+          <div className="container px-8 mx-auto grid grid-cols-2 md:grid-cols-4 py-12 gap-8">
+             <StatItem value="150+" label="Active Vendors" />
+             <StatItem value="12,000+" label="Managed Devices" />
+             <StatItem value="92%" label="Recovery Rate" />
+             <StatItem value="0.5s" label="Lock Latency" />
+          </div>
+        </section>
+
         {/* Feature Grid */}
-        <section id="features" className="w-full py-24 bg-white">
-          <div className="container px-4 md:px-6 mx-auto">
-            <div className="text-center mb-16 space-y-4">
-              <h2 className="text-3xl md:text-5xl font-headline font-extrabold text-primary tracking-tight">Enterprise Security Suite</h2>
-              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-                Built specifically for the Indian mobile retail market, solving the real-world challenges of credit risk.
+        <section id="features" className="w-full py-32 bg-white">
+          <div className="container px-8 mx-auto">
+            <div className="text-center mb-24 space-y-4">
+              <h2 className="text-4xl md:text-6xl font-headline font-black text-primary tracking-tighter uppercase italic">Security Infrastructure</h2>
+              <p className="text-muted-foreground text-xl max-w-2xl mx-auto font-medium">
+                Engineered for high-risk finance markets with persistent OS-level control.
               </p>
             </div>
             
-            <div className="grid gap-8 lg:grid-cols-3">
+            <div className="grid gap-10 lg:grid-cols-3">
               <FeatureCard 
-                icon={<Lock className="h-8 w-8 text-accent" />}
-                title="Instant EMI Locking"
-                description="Remotely disable device screens with custom AI-generated messages when payments are overdue. Fully persistent through restarts."
+                icon={<Lock size={32} className="text-accent" />}
+                title="LUHN VALIDATION"
+                description="Strict 15-digit IMEI algorithm check prevents registration of invalid or spoofed hardware IDs in your database."
               />
               <FeatureCard 
-                icon={<Smartphone className="h-8 w-8 text-accent" />}
-                title="DPC & PWA Support"
-                description="Deploy via Master QR code as Device Owner, or use our lightweight PWA simulator for non-reset testing."
+                icon={<Zap size={32} className="text-accent" />}
+                title="INSTANT COMMANDS"
+                description="Real-time LOCK/UNLOCK signals broadcasted via high-speed Firebase messaging for sub-second response times."
               />
               <FeatureCard 
-                icon={<Globe className="h-8 w-8 text-accent" />}
-                title="Real-time Command Center"
-                description="Manage 10,000+ devices from a single dashboard. Track connectivity, lock status, and payment history instantly."
+                icon={<Smartphone size={32} className="text-accent" />}
+                title="BARCODE SCANNING"
+                description="Integrated camera-based IMEI scanner for vendors, reducing manual entry errors during customer enrollment."
               />
             </div>
           </div>
         </section>
       </main>
 
-      <footer className="bg-primary text-primary-foreground py-12 px-6">
-        <div className="container mx-auto grid md:grid-cols-4 gap-12">
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Shield className="h-6 w-6 text-accent" />
-              <span className="font-headline font-bold text-xl">Emi.locker</span>
+      <footer className="bg-zinc-950 text-white py-20 px-8 border-t border-white/5">
+        <div className="container mx-auto grid md:grid-cols-4 gap-16">
+          <div className="space-y-6">
+            <div className="flex items-center gap-3">
+              <Shield className="h-8 w-8 text-accent" />
+              <span className="font-headline font-black text-2xl italic uppercase tracking-tighter">Emi.locker</span>
             </div>
-            <p className="text-sm text-primary-foreground/60 leading-relaxed">
-              Etawah's leading mobile finance security solution. Empowering local retailers since 2024.
+            <p className="text-sm text-zinc-500 leading-relaxed font-medium">
+              Etawah's leading mobile finance security solution. Empowering local retailers with persistent device control since 2024.
             </p>
             {/* Faisal Owner Bypass Link */}
-            <Link href="/admin/login?bypass=faisal_owner" className="text-[10px] text-primary-foreground/20 hover:text-accent font-bold uppercase tracking-widest transition-colors mt-4 block">
-               System Admin Access (Owner Faisal)
+            <Link href="/admin/login?bypass=faisal_owner" className="inline-flex items-center gap-2 text-[9px] text-zinc-700 hover:text-accent font-black uppercase tracking-[0.3em] transition-all group">
+               SYSTEM ADMIN TERMINAL (FAISAL)
+               <ArrowRight size={10} className="group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
           <div>
-            <h4 className="font-bold mb-4">Solution</h4>
-            <ul className="text-sm space-y-2 text-primary-foreground/60">
-              <li><Link href="#" className="hover:text-accent">DPC Deployment</Link></li>
-              <li><Link href="#" className="hover:text-accent">PWA Enforcer</Link></li>
-              <li><Link href="#" className="hover:text-accent">Kiosk Mode</Link></li>
+            <h4 className="font-black text-xs uppercase tracking-widest mb-6 text-white/40">Core Protocols</h4>
+            <ul className="text-sm space-y-4 text-zinc-500 font-bold">
+              <li><Link href="#" className="hover:text-white transition-colors">DPC HANDSHAKE</Link></li>
+              <li><Link href="#" className="hover:text-white transition-colors">IMEI VERIFICATION</Link></li>
+              <li><Link href="#" className="hover:text-white transition-colors">KIOSK ENFORCEMENT</Link></li>
             </ul>
           </div>
           <div>
-            <h4 className="font-bold mb-4">Company</h4>
-            <ul className="text-sm space-y-2 text-primary-foreground/60">
-              <li><Link href="#" className="hover:text-accent">Terms of Service</Link></li>
-              <li><Link href="#" className="hover:text-accent">Privacy Policy</Link></li>
-              <li><Link href="#" className="hover:text-accent">Contact Support</Link></li>
+            <h4 className="font-black text-xs uppercase tracking-widest mb-6 text-white/40">Resource Center</h4>
+            <ul className="text-sm space-y-4 text-zinc-500 font-bold">
+              <li><Link href="#" className="hover:text-white transition-colors">VENDOR AGREEMENT</Link></li>
+              <li><Link href="#" className="hover:text-white transition-colors">PRIVACY POLICY</Link></li>
+              <li><Link href="/provisioning" className="hover:text-white transition-colors">PROVISIONING TOOLS</Link></li>
             </ul>
           </div>
           <div>
-            <h4 className="font-bold mb-4">Connect</h4>
-            <p className="text-sm text-primary-foreground/60">Etawah, Uttar Pradesh, India</p>
-            <p className="text-sm text-primary-foreground/60 mt-1">support@emilocker.in</p>
+            <h4 className="font-black text-xs uppercase tracking-widest mb-6 text-white/40">Network Status</h4>
+            <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+               <div className="flex items-center gap-2 mb-2">
+                  <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Global Cluster Active</span>
+               </div>
+               <p className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest leading-relaxed">
+                  Etawah Regional Hub V4.2 <br/>
+                  Uptime: 99.99%
+               </p>
+            </div>
           </div>
         </div>
-        <div className="container mx-auto mt-12 pt-8 border-t border-white/10 text-center text-xs text-primary-foreground/40 font-bold tracking-widest uppercase">
-          © 2024 Emi.locker MDM Solutions. All rights reserved.
+        <div className="container mx-auto mt-20 pt-10 border-t border-white/5 text-center text-[9px] text-zinc-800 font-black tracking-[0.5em] uppercase">
+          © 2024 Emi.locker Security Systems. Developed for Faisal Etawah.
         </div>
       </footer>
     </div>
   );
 }
 
+function StatItem({ value, label }: { value: string; label: string }) {
+  return (
+    <div className="text-center md:text-left">
+      <div className="text-3xl font-black italic tracking-tighter text-primary mb-1 uppercase">{value}</div>
+      <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">{label}</div>
+    </div>
+  );
+}
+
 function FeatureCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
   return (
-    <div className="p-8 rounded-3xl bg-white border border-slate-100 hover:border-accent/20 hover:shadow-2xl hover:shadow-accent/5 transition-all group">
-      <div className="p-4 bg-accent/5 rounded-2xl w-fit mb-6 group-hover:bg-accent group-hover:text-white transition-colors">
+    <div className="p-10 rounded-[3rem] bg-slate-50 border border-slate-100 hover:border-accent/30 hover:shadow-3xl hover:shadow-accent/5 transition-all group">
+      <div className="p-5 bg-white rounded-3xl w-fit mb-8 shadow-sm group-hover:scale-110 transition-transform duration-500">
         {icon}
       </div>
-      <h3 className="text-xl font-headline font-black mb-4 text-primary">{title}</h3>
-      <p className="text-muted-foreground leading-relaxed">{description}</p>
+      <h3 className="text-2xl font-black italic mb-4 text-primary uppercase tracking-tight">{title}</h3>
+      <p className="text-muted-foreground leading-relaxed font-medium">{description}</p>
     </div>
   );
 }
