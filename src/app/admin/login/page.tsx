@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Lock, ArrowLeft } from 'lucide-react';
+import { Loader2, Lock, ArrowLeft, ShieldAlert } from 'lucide-react';
 import { useAuth, useFirestore } from '@/firebase';
 import { signInAnonymously } from 'firebase/auth';
 import { collection, query, where, getDocs } from 'firebase/firestore';
@@ -43,11 +43,21 @@ export default function AdminLoginPage() {
     if (!auth) return;
     setLoading(true);
     try {
+      // Faisal, please enable "Anonymous" provider in Firebase Console > Authentication
       await signInAnonymously(auth);
       toast({ title: 'OWNER ACCESS GRANTED', description: 'Welcome Faisal. System authorized.' });
-      router.push('/admin/vendors');
-    } catch (e) {
+      router.push('/dashboard');
+    } catch (e: any) {
       console.error('Bypass error:', e);
+      if (e.code === 'auth/admin-restricted-operation') {
+        toast({ 
+          variant: 'destructive', 
+          title: 'Action Required', 
+          description: 'Please Enable "Anonymous" sign-in in Firebase Console Authentication settings to use the bypass.' 
+        });
+      } else {
+        toast({ variant: 'destructive', title: 'Bypass Failed', description: e.message });
+      }
       setLoading(false);
     }
   };
@@ -59,7 +69,6 @@ export default function AdminLoginPage() {
     setLoading(true);
     
     const cleanNumber = mobile.trim();
-    // HARDCODED BYPASS FOR FAISAL
     if (ADMIN_NUMBERS.includes(cleanNumber) || ADMIN_NUMBERS.includes(`+91${cleanNumber}`)) {
       await handleBypassLogin();
       return;
@@ -75,13 +84,13 @@ export default function AdminLoginPage() {
         toast({
           variant: 'destructive',
           title: 'Access Denied',
-          description: `Number ${formattedNumber} is not authorized in Superuser registry.`,
+          description: `Number ${formattedNumber} is not authorized.`,
         });
         setLoading(false);
         return;
       }
 
-      toast({ title: 'Prototype Mode', description: 'Enter code 123456 to authorize.' });
+      toast({ title: 'Testing Mode', description: 'Enter code 123456.' });
       setStep('otp');
     } catch (error: any) {
       toast({ variant: 'destructive', title: 'Registry Sync Error', description: error.message });
@@ -97,10 +106,10 @@ export default function AdminLoginPage() {
     try {
       if (otp === '123456') {
         await signInAnonymously(auth);
-        toast({ title: 'Admin Terminal Authorized' });
-        router.push('/admin/vendors');
+        toast({ title: 'Admin Authorized' });
+        router.push('/dashboard');
       } else {
-        throw new Error('Invalid Authorization Code');
+        throw new Error('Invalid Code');
       }
     } catch (error: any) {
       toast({ variant: 'destructive', title: 'Verification Failed', description: error.message });
@@ -157,16 +166,19 @@ export default function AdminLoginPage() {
                   />
                 </div>
               )}
-              <Button className="w-full h-12 bg-red-600 hover:bg-red-700 font-bold shadow-lg shadow-red-900/20" disabled={loading}>
+              <Button className="w-full h-12 bg-red-600 hover:bg-red-700 font-bold" disabled={loading}>
                 {step === 'phone' ? 'ACCESS TERMINAL' : 'AUTHORIZE SESSION'}
               </Button>
             </form>
           </CardContent>
         </Card>
         
-        <p className="text-center text-[9px] text-zinc-700 font-bold uppercase tracking-[0.3em] pt-4">
-          Prototype Mode | Encrypted Command Interface Faisal-v4.2
-        </p>
+        <div className="mt-4 p-4 rounded-xl bg-red-500/5 border border-red-500/10 flex items-start gap-3">
+          <ShieldAlert className="text-red-500 shrink-0 mt-0.5" size={16} />
+          <p className="text-[10px] text-zinc-500 font-medium leading-relaxed">
+            Note: If you encounter an "admin-restricted-operation" error, please enable **Anonymous Authentication** in your Firebase Console settings.
+          </p>
+        </div>
       </div>
     </div>
   );

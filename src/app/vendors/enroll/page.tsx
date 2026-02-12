@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -6,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Smartphone, UserPlus, CheckCircle2, Copy, Download, Loader2, ShieldAlert, Mail, SmartphoneNfc } from 'lucide-react';
+import { Smartphone, UserPlus, CheckCircle2, Loader2, ShieldAlert, Mail, SmartphoneNfc } from 'lucide-react';
 import { useFirestore, useUser } from '@/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -80,7 +79,7 @@ export default function CustomerEnrollmentPage() {
       .then((docRef) => {
         setEnrolledId(docRef.id);
         setLoading(false);
-        toast({ title: "Enrollment Finalized", description: `Device for ${data.customerName} registered successfully.` });
+        toast({ title: "Enrollment Finalized", description: `Device registered successfully.` });
       })
       .catch(async (error) => {
         const permissionError = new FirestorePermissionError({
@@ -94,7 +93,6 @@ export default function CustomerEnrollmentPage() {
   };
 
   if (enrolledId) {
-    const clientUrl = `${baseUrl}/device-view/${enrolledId}`;
     return (
       <div className="max-w-md mx-auto py-12 space-y-6 animate-in zoom-in duration-300">
         <Card className="text-center p-8 border-accent shadow-2xl bg-zinc-950 text-white">
@@ -110,7 +108,7 @@ export default function CustomerEnrollmentPage() {
 
           <div className="space-y-4 text-left">
             <div className="p-4 bg-zinc-900 rounded-2xl border border-white/5">
-              <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest mb-1">CUSTOMER ID</p>
+              <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest mb-1">CUSTOMER</p>
               <p className="font-mono font-bold text-accent">{formData.customerName}</p> 
             </div>
 
@@ -133,7 +131,7 @@ export default function CustomerEnrollmentPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-700">
       <div className="flex items-center gap-4">
-        <div className="h-14 w-14 bg-zinc-900 border border-accent/20 rounded-2xl flex items-center justify-center text-accent shadow-xl shadow-accent/10">
+        <div className="h-14 w-14 bg-zinc-900 border border-accent/20 rounded-2xl flex items-center justify-center text-accent shadow-xl">
            <UserPlus size={28} />
         </div>
         <div>
@@ -148,81 +146,59 @@ export default function CustomerEnrollmentPage() {
             <ShieldAlert className="text-accent" />
             Enrollment Manifest
           </CardTitle>
-          <CardDescription>Industrial IMEI scanning and customer binding protocol.</CardDescription>
+          <CardDescription>Multi-slot IMEI verification protocol.</CardDescription>
         </CardHeader>
         <CardContent className="pt-8">
           <form onSubmit={handleSubmit} className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Customer Full Name</Label>
-                <Input required placeholder="E.g. Rajesh Kumar" value={formData.customerName} onChange={(e) => setFormData({...formData, customerName: e.target.value})} className="h-12 border-slate-200" />
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Customer Name</Label>
+                <Input required placeholder="E.g. Rajesh Kumar" value={formData.customerName} onChange={(e) => setFormData({...formData, customerName: e.target.value})} className="h-12" />
               </div>
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Mobile Number</Label>
-                <Input required placeholder="+91" value={formData.mobile} onChange={(e) => setFormData({...formData, mobile: e.target.value})} className="h-12 border-slate-200" />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Email Address</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input type="email" placeholder="customer@example.com" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="h-12 pl-10 border-slate-200" />
-                </div>
+                <Input required placeholder="+91" value={formData.mobile} onChange={(e) => setFormData({...formData, mobile: e.target.value})} className="h-12" />
               </div>
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Device Model</Label>
-                <Input required placeholder="e.g. Realme Narzo 60" value={formData.model} onChange={(e) => setFormData({...formData, model: e.target.value})} className="h-12 border-slate-200" />
+                <Input required placeholder="e.g. Realme Narzo 60" value={formData.model} onChange={(e) => setFormData({...formData, model: e.target.value})} className="h-12" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Email Address</Label>
+                <Input type="email" placeholder="customer@example.com" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="h-12" />
               </div>
 
-              {/* IMEI 1 with Scanner */}
-              <div className="space-y-2 md:col-span-1">
+              <div className="space-y-2">
                 <div className="flex justify-between items-center mb-1">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">IMEI 1 (Slot 1)</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">IMEI 1 (Required)</Label>
                   <ImeiScanner onScan={(imei) => setFormData({...formData, imei1: imei})} label="Scan Slot 1" />
                 </div>
                 <Input 
                   required 
-                  placeholder="Enter 15-digit IMEI" 
+                  placeholder="15-digit IMEI" 
                   value={formData.imei1}
                   onChange={(e) => setFormData({...formData, imei1: e.target.value.replace(/\D/g, '').substring(0, 15)})}
-                  className={`h-12 font-mono tracking-widest text-lg ${errors.imei1 ? 'border-destructive' : 'border-slate-200'}`}
+                  className={`h-12 font-mono ${errors.imei1 ? 'border-destructive' : ''}`}
                 />
                 {errors.imei1 && <p className="text-[10px] font-bold text-destructive uppercase tracking-widest">{errors.imei1}</p>}
               </div>
 
-              {/* IMEI 2 with Scanner */}
-              <div className="space-y-2 md:col-span-1">
+              <div className="space-y-2">
                 <div className="flex justify-between items-center mb-1">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">IMEI 2 (Slot 2)</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">IMEI 2 (Optional)</Label>
                   <ImeiScanner onScan={(imei) => setFormData({...formData, imei2: imei})} label="Scan Slot 2" />
                 </div>
                 <Input 
-                  placeholder="Optional 15-digit IMEI" 
+                  placeholder="15-digit IMEI" 
                   value={formData.imei2}
                   onChange={(e) => setFormData({...formData, imei2: e.target.value.replace(/\D/g, '').substring(0, 15)})}
-                  className={`h-12 font-mono tracking-widest text-lg ${errors.imei2 ? 'border-destructive' : 'border-slate-200'}`}
+                  className={`h-12 font-mono ${errors.imei2 ? 'border-destructive' : ''}`}
                 />
                 {errors.imei2 && <p className="text-[10px] font-bold text-destructive uppercase tracking-widest">{errors.imei2}</p>}
               </div>
             </div>
 
-            <div className="pt-6 border-t space-y-4">
-              <div className="flex items-center gap-2 mb-4">
-                <Smartphone size={18} className="text-accent" />
-                <h3 className="font-black text-xs uppercase tracking-widest text-primary">Financial Binding</h3>
-              </div>
-              <div className="grid grid-cols-2 gap-8 bg-slate-50 p-8 rounded-3xl border border-slate-200">
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-bold text-muted-foreground uppercase">Loan Tenure (Months)</Label>
-                  <Input type="number" value={formData.emiMonths} onChange={(e) => setFormData({...formData, emiMonths: parseInt(e.target.value)})} className="h-12 bg-white border-slate-200" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-bold text-muted-foreground uppercase">Monthly EMI (₹)</Label>
-                  <Input type="number" placeholder="0.00" value={formData.emiAmount} onChange={(e) => setFormData({...formData, emiAmount: parseFloat(e.target.value)})} className="h-12 bg-white border-slate-200" />
-                </div>
-              </div>
-            </div>
-
-            <Button type="submit" disabled={loading} className="w-full bg-primary text-white hover:bg-primary/90 h-16 text-xl font-black italic tracking-tighter uppercase shadow-xl shadow-primary/20 rounded-2xl">
+            <Button type="submit" disabled={loading} className="w-full bg-primary text-white hover:bg-primary/90 h-16 text-xl font-black italic uppercase tracking-tighter rounded-2xl">
               {loading ? <Loader2 className="h-6 w-6 animate-spin mr-2" /> : null}
               SECURE DEVICE BINDING
             </Button>

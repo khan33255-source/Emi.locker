@@ -25,13 +25,11 @@ export default function DashboardLayout({
 
   useEffect(() => {
     if (isMounted && !loading) {
-      const isAdminPath = pathname.startsWith('/admin');
-      const isPublicPath = pathname === '/' || pathname.startsWith('/device-view');
-      const isFaisal = user?.phoneNumber === '+918077550043' || user?.isAnonymous;
+      const isPublicPath = pathname === '/' || pathname.startsWith('/device-view') || pathname === '/admin/login' || pathname === '/vendors/login';
       
       if (!user && !isPublicPath) {
-        if (isAdminPath) {
-          if (pathname !== '/admin/login') router.replace('/admin/login');
+        if (pathname.startsWith('/admin')) {
+          router.replace('/admin/login');
         } else {
           router.replace('/vendors/login');
         }
@@ -46,23 +44,24 @@ export default function DashboardLayout({
     }
   };
 
-  if (!isMounted || (loading && !user)) {
+  if (!isMounted) return null;
+
+  if (loading && !user) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background">
         <Loader2 className="h-10 w-10 animate-spin text-accent" />
-        <p className="mt-4 text-sm font-medium text-muted-foreground">Synchronizing Authorization...</p>
+        <p className="mt-4 text-sm font-medium text-muted-foreground">Authorizing...</p>
       </div>
     );
   }
 
-  const isProtectedPath = !pathname.startsWith('/admin/login') && !pathname.startsWith('/vendors/login') && pathname !== '/';
-  if (!user && isProtectedPath) return null;
+  const isBypass = pathname.startsWith('/admin/login') || pathname.startsWith('/vendors/login') || pathname === '/';
+  if (!user && !isBypass) return null;
 
-  const isAdmin = pathname.startsWith('/admin') || user?.isAnonymous || user?.phoneNumber === '+918077550043';
+  const isAdmin = user?.phoneNumber === '+918077550043' || user?.isAnonymous;
 
   return (
     <div className="flex min-h-screen bg-background font-body">
-      {/* Sidebar */}
       <aside className="w-64 bg-primary text-primary-foreground flex flex-col hidden md:flex border-r border-white/10">
         <div className="p-6">
           <Link className="flex items-center gap-2" href="/dashboard">
@@ -74,14 +73,14 @@ export default function DashboardLayout({
           <NavItem href="/dashboard" icon={<LayoutDashboard size={20} />} label="Overview" />
           <NavItem href="/devices" icon={<Smartphone size={20} />} label="Managed Devices" />
           <NavItem href="/vendors/enroll" icon={<PlusCircle size={20} />} label="Enroll Customer" />
-          <NavItem href="/admin/vendors" icon={<Users size={20} />} label="Vendors List" />
+          {isAdmin && <NavItem href="/admin/vendors" icon={<Users size={20} />} label="Vendors List" />}
           <NavItem href="/provisioning" icon={<QrCode size={20} />} label="Provisioning" />
           <NavItem href="#" icon={<Settings size={20} />} label="Settings" />
         </nav>
         <div className="p-4 border-t border-white/10">
           <Button 
             variant="ghost" 
-            className="w-full justify-start gap-2 hover:bg-white/10 text-primary-foreground/70 hover:text-white"
+            className="w-full justify-start gap-2 text-primary-foreground/70"
             onClick={handleSignOut}
           >
             <LogOut size={20} />
@@ -90,7 +89,6 @@ export default function DashboardLayout({
         </div>
       </aside>
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col">
         <header className="h-16 bg-white border-b flex items-center justify-between px-8">
           <h2 className="text-lg font-headline font-semibold text-primary">
@@ -98,8 +96,8 @@ export default function DashboardLayout({
           </h2>
           <div className="flex items-center gap-4">
             <div className="text-right">
-              <p className="text-sm font-medium">{user?.phoneNumber || (user?.isAnonymous ? 'Faisal (Owner)' : 'Verified Vendor')}</p>
-              <p className="text-xs text-muted-foreground">{isAdmin ? 'Superuser' : 'Verified Vendor'}</p>
+              <p className="text-sm font-medium">{isAdmin ? 'Faisal (Owner)' : 'Verified Vendor'}</p>
+              <p className="text-xs text-muted-foreground">{isAdmin ? 'Superuser' : 'Shop Access'}</p>
             </div>
             <div className="h-8 w-8 rounded-full bg-accent flex items-center justify-center text-white font-bold">
               {isAdmin ? 'SA' : 'VN'}
@@ -124,7 +122,7 @@ function NavItem({ href, icon, label }: { href: string; icon: React.ReactNode; l
       className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
         isActive 
           ? 'bg-white/10 text-white' 
-          : 'text-primary-foreground/70 hover:text-white hover:bg-white/5'
+          : 'text-primary-foreground/70 hover:text-white'
       }`}
     >
       {icon}
