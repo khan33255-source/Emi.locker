@@ -24,19 +24,21 @@ export default function DashboardLayout({
   }, []);
 
   useEffect(() => {
-    if (isMounted && !loading && !user) {
-      // Check if we are on a protected route
+    // Only handle redirects if we are done loading and mounted
+    if (isMounted && !loading) {
       const isAdminPath = pathname.startsWith('/admin');
-      const isDashboardPath = pathname.startsWith('/dashboard') || pathname.startsWith('/devices') || pathname.startsWith('/provisioning');
+      const isPublicPath = pathname === '/' || pathname.startsWith('/device-view');
       
-      if (isDashboardPath && !isAdminPath) {
-        router.replace('/vendors/login');
-      } else if (isAdminPath && pathname !== '/admin/login') {
-        // Only redirect to login if NOT already on login page
-        router.replace('/admin/login');
+      if (!user && !isPublicPath) {
+        // Not logged in: redirect based on intended destination
+        if (isAdminPath) {
+          if (pathname !== '/admin/login') router.replace('/admin/login');
+        } else {
+          router.replace('/vendors/login');
+        }
       }
     }
-  }, [user, loading, isMounted, router, pathname]);
+  }, [user, loading, isMounted, pathname, router]);
 
   const handleSignOut = async () => {
     if (auth) {
@@ -45,6 +47,7 @@ export default function DashboardLayout({
     }
   };
 
+  // Show loader while identifying session
   if (!isMounted || (loading && !user)) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background">
@@ -54,8 +57,9 @@ export default function DashboardLayout({
     );
   }
 
-  // If we have a user, render. If not, the useEffect above will handle the redirect.
-  if (!user && !loading) return null;
+  // If no user and we are on a protected route, we return null as the useEffect will redirect
+  const isProtectedPath = !pathname.startsWith('/admin/login') && !pathname.startsWith('/vendors/login') && pathname !== '/';
+  if (!user && isProtectedPath) return null;
 
   const isAdmin = pathname.startsWith('/admin');
 
@@ -97,7 +101,7 @@ export default function DashboardLayout({
           </h2>
           <div className="flex items-center gap-4">
             <div className="text-right">
-              <p className="text-sm font-medium">{user?.phoneNumber || user?.email || 'Authenticated User'}</p>
+              <p className="text-sm font-medium">{user?.phoneNumber || user?.email || (user?.isAnonymous ? 'Authorized Session' : 'Unknown User')}</p>
               <p className="text-xs text-muted-foreground">{isAdmin ? 'Superuser' : 'Verified Vendor'}</p>
             </div>
             <div className="h-8 w-8 rounded-full bg-accent flex items-center justify-center text-white font-bold">

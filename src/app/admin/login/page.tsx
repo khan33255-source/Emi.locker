@@ -44,7 +44,7 @@ export default function AdminLoginPage() {
     setLoading(true);
     try {
       await signInAnonymously(auth);
-      toast({ title: 'Owner Access Granted', description: 'Welcome Faisal. Terminal authorized.' });
+      toast({ title: 'Owner Access Granted', description: 'Welcome Faisal. System authorized.' });
       router.push('/admin/vendors');
     } catch (e) {
       console.error('Bypass error:', e);
@@ -59,7 +59,8 @@ export default function AdminLoginPage() {
     setLoading(true);
     
     // Faisal Bypass directly from Number Entry
-    if (ADMIN_NUMBERS.includes(mobile.trim())) {
+    const cleanNumber = mobile.trim();
+    if (ADMIN_NUMBERS.includes(cleanNumber) || ADMIN_NUMBERS.includes(`+91${cleanNumber}`)) {
       await handleBypassLogin();
       return;
     }
