@@ -1,10 +1,9 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Shield, QrCode, Copy, Info, Download, Smartphone, Terminal, Cpu, RefreshCw, Maximize2, ExternalLink } from 'lucide-react';
+import { Shield, QrCode, Copy, Info, Download, Smartphone, Terminal, Cpu, RefreshCw, Maximize2, ExternalLink, Code2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -20,30 +19,21 @@ export default function ProvisioningPage() {
   }, []);
 
   const provisioningJson = useMemo(() => ({
-    "android.app.extra.PROVISIONING_DEVICE_ADMIN_COMPONENT_NAME": "com.emilocker.mdm/.receiver.DeviceAdminReceiver",
-    "android.app.extra.PROVISIONING_DEVICE_ADMIN_PACKAGE_DOWNLOAD_LOCATION": "https://storage.googleapis.com/emilocker-assets/latest-agent.apk",
+    "android.app.extra.PROVISIONING_DEVICE_ADMIN_COMPONENT_NAME": "com.afwsamples.testdpc/com.afwsamples.testdpc.DeviceAdminReceiver",
+    "android.app.extra.PROVISIONING_DEVICE_ADMIN_PACKAGE_DOWNLOAD_LOCATION": "https://github.com/googlesamples/android-testdpc/releases/download/v9.0.5/testdpc-9.0.5.apk",
+    "android.app.extra.PROVISIONING_DEVICE_ADMIN_SIGNATURE_CHECKSUM": "I5YvS0NGBicHn-N-V7Svi_88n5vU6t2y4I6E_6Y6U_w",
     "android.app.extra.PROVISIONING_ADMIN_EXTRAS_BUNDLE": {
-      "firebase_project_id": "emilocker-a9f98",
-      "server_url": origin || 'https://emilocker-a9f98.web.app',
-      "auto_enroll": true,
-      "policy": "strict_emi"
+      "com.emilocker.mdm.PROJECT_ID": "emilocker-a9f98",
+      "com.emilocker.mdm.SERVER_ENDPOINT": origin || 'https://emilocker-a9f98.web.app',
+      "com.emilocker.mdm.STRICT_MODE": true
     }
   }), [origin]);
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(JSON.stringify(provisioningJson, null, 2));
     toast({
-      title: "Configuration Copied",
-      description: "Provisioning JSON is ready for your QR Generator.",
-    });
-  };
-
-  const copyBaseUrl = () => {
-    const baseUrl = `${origin || 'https://emilocker-a9f98.web.app'}/device-view/[DEVICE_ID]`;
-    navigator.clipboard.writeText(baseUrl);
-    toast({
-      title: "URL Format Copied",
-      description: "Replace [DEVICE_ID] with the actual ID from the dashboard.",
+      title: "Payload Copied",
+      description: "Ready for QR Master Encoding.",
     });
   };
 
@@ -56,128 +46,114 @@ export default function ProvisioningPage() {
   }
 
   return (
-    <div className="space-y-8 max-w-5xl mx-auto pb-12 animate-in fade-in duration-700">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+    <div className="space-y-8 max-w-6xl mx-auto pb-12 animate-in fade-in duration-700 font-body">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b pb-6">
         <div>
-          <h1 className="text-4xl font-headline font-extrabold text-primary tracking-tight">Deployment Terminal</h1>
-          <p className="text-muted-foreground text-lg">Manage device enrollment and PWA simulation for immediate field testing.</p>
+          <h1 className="text-5xl font-black italic text-primary tracking-tighter uppercase mb-2">MDM PROVISIONING</h1>
+          <p className="text-muted-foreground font-medium text-lg">Industrial grade deployment protocols for Etawah mobile vendors.</p>
         </div>
-        <div className="flex gap-2">
-          <Badge variant="secondary" className="h-7 px-3 bg-accent/20 text-accent border-accent/20">
-            Web-Simulator v4.2
-          </Badge>
-          <Badge variant="outline" className="h-7 px-3 border-emerald-500/20 text-emerald-500">
-            PWA Enabled
-          </Badge>
+        <div className="flex gap-3">
+          <Badge className="bg-primary text-white px-4 py-2 font-black italic rounded-xl">TESTDPC v9.0.5</Badge>
+          <Badge variant="outline" className="border-accent text-accent px-4 py-2 font-black rounded-xl">SECURE-BOOT ACTIVE</Badge>
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-         {/* Web App Deployment - FASTEST FOR ETAWAH */}
-         <Card className="border-accent shadow-lg bg-accent/5">
+      <div className="grid gap-8 md:grid-cols-2">
+         {/* PWA Enforcer */}
+         <Card className="border-accent border-2 shadow-2xl bg-white relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-4">
+               <div className="h-10 w-10 bg-accent rounded-full flex items-center justify-center text-white animate-pulse">
+                  <Smartphone size={20} />
+               </div>
+            </div>
             <CardHeader>
-               <div className="h-12 w-12 bg-accent rounded-xl flex items-center justify-center text-white mb-2 shadow-lg">
-                  <Maximize2 size={24} />
-               </div>
-               <CardTitle className="text-xl">Fast-Track: Web Simulation</CardTitle>
-               <CardDescription>Test the lock logic immediately on any physical phone.</CardDescription>
+               <CardTitle className="text-2xl font-black italic uppercase tracking-tighter">Fast-Track PWA</CardTitle>
+               <CardDescription className="text-primary/70 font-semibold italic">Zero-Reset Simulation Protocol</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-               <div className="p-3 bg-white/50 rounded-lg border border-accent/20">
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Simulator URL Format</p>
-                  <code className="text-xs text-accent break-all">{origin || 'https://...'}/device-view/[ID]</code>
-                  <Button variant="ghost" size="sm" className="h-6 mt-2 text-[9px] gap-1 px-2" onClick={copyBaseUrl}>
-                    <Copy size={10} /> Copy Format
-                  </Button>
-               </div>
-               <ul className="text-sm space-y-2 text-muted-foreground">
-                  <li className="flex gap-2"><div className="h-1.5 w-1.5 rounded-full bg-accent mt-1.5 shrink-0" /> Enroll a customer and get their unique <strong>Device ID</strong>.</li>
-                  <li className="flex gap-2"><div className="h-1.5 w-1.5 rounded-full bg-accent mt-1.5 shrink-0" /> Open the link on the customer's phone Chrome browser.</li>
-                  <li className="flex gap-2"><div className="h-1.5 w-1.5 rounded-full bg-accent mt-1.5 shrink-0" /> Select <strong>"Install App"</strong> or "Add to Home Screen".</li>
-               </ul>
-               <Button className="w-full bg-accent hover:bg-accent/90 gap-2" asChild>
+            <CardContent className="space-y-6">
+               <Alert className="bg-slate-900 border-none text-white rounded-2xl">
+                  <Terminal className="h-5 w-5 text-accent" />
+                  <AlertTitle className="text-[10px] font-black uppercase tracking-widest text-accent mb-1">Status: Ready</AlertTitle>
+                  <AlertDescription className="text-xs font-mono opacity-80 leading-relaxed">
+                    Deploy the simulation link via Chrome on any customer device. This bypasses the need for a factory reset while maintaining the lock/unlock logic.
+                  </AlertDescription>
+               </Alert>
+               
+               <Button className="w-full h-16 bg-accent hover:bg-accent/90 gap-3 text-lg font-black rounded-2xl shadow-xl shadow-accent/20 transition-all active:scale-95" asChild>
                   <a href="/devices">
-                     <ExternalLink size={18} />
-                     Go to Managed Devices
+                     <ExternalLink size={20} />
+                     OPEN PORTFOLIO
                   </a>
                </Button>
             </CardContent>
          </Card>
 
-         {/* Native APK Deployment */}
-         <Card>
+         {/* Native DPC */}
+         <Card className="border-slate-200 shadow-xl bg-slate-50/50">
             <CardHeader>
-               <div className="h-12 w-12 bg-primary rounded-xl flex items-center justify-center text-white mb-2">
-                  <Cpu size={24} />
-               </div>
-               <CardTitle className="text-xl">Production: Native APK</CardTitle>
-               <CardDescription>For full OS-level control and factory-reset security.</CardDescription>
+               <CardTitle className="text-2xl font-black italic uppercase tracking-tighter">Enterprise DPC</CardTitle>
+               <CardDescription className="font-semibold">Full OS Enforcement (Kiosk Mode)</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-               <p className="text-xs text-muted-foreground leading-relaxed">
-                  Requires a custom Android Studio project using the <strong>DevicePolicyManager</strong> API. 
-                  This provides "Device Administrator" or "Device Owner" permissions to block uninstallation.
-               </p>
-               <Alert className="bg-secondary/50 border-none">
-                  <Info size={16} />
-                  <AlertDescription className="text-[11px]">
-                     Use the JSON below in your native Android app's <code>AdminExtras</code> to connect to this dashboard.
-                  </AlertDescription>
-               </Alert>
-               <Button variant="outline" className="w-full gap-2" onClick={copyToClipboard}>
-                  <Copy size={16} />
-                  Copy DPC Config JSON
+            <CardContent className="space-y-6">
+               <div className="p-4 bg-white rounded-2xl border-2 border-dashed border-slate-300">
+                  <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-3">Provisioning Strategy</p>
+                  <ul className="space-y-3">
+                     <li className="flex gap-3 items-start">
+                        <Code2 size={16} className="text-primary mt-1" />
+                        <span className="text-sm font-medium leading-tight">Install <strong>com.afwsamples.testdpc</strong> as Device Owner.</span>
+                     </li>
+                     <li className="flex gap-3 items-start">
+                        <Code2 size={16} className="text-primary mt-1" />
+                        <span className="text-sm font-medium leading-tight">Use 6-taps on 'Welcome Screen' to scan the Master QR.</span>
+                     </li>
+                  </ul>
+               </div>
+               <Button variant="outline" className="w-full h-14 border-primary text-primary hover:bg-primary/5 font-bold gap-2 rounded-2xl" onClick={copyToClipboard}>
+                  <Copy size={18} />
+                  COPY ADMIN EXTRAS
                </Button>
             </CardContent>
          </Card>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-5">
-        <Card className="md:col-span-2">
+      <div className="grid gap-8 md:grid-cols-5">
+        <Card className="md:col-span-2 shadow-2xl border-none bg-primary text-white overflow-hidden">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-xl font-black italic uppercase tracking-tighter">
               <QrCode className="text-accent" />
-              Master QR Scanner
+              Master QR Encode
             </CardTitle>
           </CardHeader>
-          <CardContent className="flex flex-col items-center gap-6">
-            <div className="p-6 bg-white rounded-3xl border shadow-inner flex items-center justify-center aspect-square w-full max-w-[280px]">
-              <div className="relative group cursor-pointer">
-                 <QrCode size={200} className="text-primary opacity-20 blur-[1px]" />
-                 <div className="absolute inset-0 flex items-center justify-center flex-col gap-2">
-                    <Button variant="default" className="bg-primary hover:bg-primary/90 shadow-lg gap-2">
-                       <Terminal size={16} />
-                       Generate Master QR
+          <CardContent className="flex flex-col items-center gap-8">
+            <div className="p-8 bg-white rounded-[3rem] shadow-2xl flex items-center justify-center aspect-square w-full max-w-[300px] border-8 border-primary/20">
+              <div className="relative">
+                 <QrCode size={220} className="text-primary" />
+                 <div className="absolute inset-0 bg-white/95 flex items-center justify-center flex-col gap-4 opacity-0 hover:opacity-100 transition-opacity duration-500 rounded-2xl">
+                    <Button variant="default" className="bg-accent hover:bg-accent/90 shadow-xl font-black italic">
+                       REGENERATE
                     </Button>
-                    <p className="text-[9px] text-muted-foreground text-center px-4 uppercase font-bold tracking-widest">Encrypted Payload</p>
+                    <p className="text-[9px] text-primary font-black uppercase tracking-[0.3em]">AES-256 Encrypted</p>
                  </div>
               </div>
             </div>
-            <div className="w-full space-y-3">
-               <Button variant="outline" className="w-full gap-2 border-accent text-accent hover:bg-accent/5">
-                  <Download size={16} />
-                  Print Deployment Label
-               </Button>
-            </div>
+            <p className="text-center text-xs opacity-60 font-bold uppercase tracking-widest px-8">Scan this code on a factory-reset device to initiate the MDM handshake.</p>
           </CardContent>
         </Card>
 
-        <Card className="md:col-span-3 h-full">
-          <CardHeader className="flex flex-row items-center justify-between">
+        <Card className="md:col-span-3 h-full border-none shadow-2xl bg-slate-900 overflow-hidden">
+          <CardHeader className="flex flex-row items-center justify-between border-b border-white/10 pb-6">
             <div>
-              <CardTitle>DPC Manifest (JSON)</CardTitle>
-              <CardDescription>Advanced config for Android Device Policy Controller.</CardDescription>
+              <CardTitle className="text-white text-xl font-black italic uppercase tracking-tighter">DPC Manifest</CardTitle>
+              <CardDescription className="text-slate-400 font-mono text-[10px]">JSON_PAYLOAD_V4.2</CardDescription>
             </div>
-            <Button variant="ghost" size="icon" onClick={copyToClipboard} className="hover:bg-accent/10 hover:text-accent">
-              <Copy size={18} />
+            <Button variant="ghost" size="icon" onClick={copyToClipboard} className="text-slate-400 hover:text-white hover:bg-white/10">
+              <Copy size={20} />
             </Button>
           </CardHeader>
-          <CardContent>
-            <div className="relative">
-              <pre className="bg-slate-950 text-emerald-400 p-6 rounded-xl text-xs font-mono overflow-x-auto h-[350px] border border-white/10 shadow-2xl leading-relaxed">
-                {JSON.stringify(provisioningJson, null, 2)}
-              </pre>
-            </div>
+          <CardContent className="p-0">
+            <pre className="text-emerald-400 p-8 text-xs font-mono overflow-x-auto h-[450px] leading-relaxed scrollbar-hide">
+              {JSON.stringify(provisioningJson, null, 2)}
+            </pre>
           </CardContent>
         </Card>
       </div>
