@@ -6,8 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
-import { Search, Smartphone, Lock, Unlock, Plus, MoreVertical, Loader2, ExternalLink, Phone, Copy, ShieldAlert } from 'lucide-react';
+import { Search, Smartphone, Lock, Unlock, Plus, Loader2, Phone, ShieldAlert } from 'lucide-react';
 import { DeviceLockDialog } from '@/components/device-lock-dialog';
 import { useCollection, useFirestore, useUser } from '@/firebase';
 import { collection, updateDoc, doc, query, where } from 'firebase/firestore';
@@ -19,11 +18,19 @@ export default function DevicesPage() {
   const { user } = useUser();
   const firestore = useFirestore();
   
-  // Multi-vendor logic: only show devices for the logged-in vendor
+  // Super Admin identification
+  const isAdmin = user?.phoneNumber === '8077550043' || user?.phoneNumber === '+918077550043';
+
+  // Multi-vendor logic: Faisal sees all, Vendors see only theirs
   const devicesQuery = useMemo(() => {
     if (!firestore || !user) return null;
+    
+    if (isAdmin) {
+      return collection(firestore, 'devices'); // Global visibility for Faisal
+    }
+    
     return query(collection(firestore, 'devices'), where('vendorId', '==', user.uid));
-  }, [firestore, user]);
+  }, [firestore, user, isAdmin]);
 
   const { data: devices, loading } = useCollection<any>(devicesQuery);
   
@@ -54,15 +61,21 @@ export default function DevicesPage() {
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b pb-8">
         <div>
-          <h1 className="text-5xl font-black italic text-primary tracking-tighter uppercase mb-2">Portfolio Control</h1>
-          <p className="text-muted-foreground font-medium text-lg">Real-time remote hardware persistence management.</p>
+          <h1 className="text-5xl font-black italic text-primary tracking-tighter uppercase mb-2">
+            {isAdmin ? 'Global Registry' : 'Portfolio Control'}
+          </h1>
+          <p className="text-muted-foreground font-medium text-lg">
+            {isAdmin ? 'Managing all hardware assets in the district.' : 'Real-time remote hardware persistence management.'}
+          </p>
         </div>
-        <Button className="bg-accent hover:bg-accent/90 gap-2 h-14 px-8 rounded-2xl font-black italic uppercase shadow-xl shadow-accent/20" asChild>
-          <Link href="/vendors/enroll">
-            <Plus size={20} />
-            New Enrollment
-          </Link>
-        </Button>
+        {!isAdmin && (
+          <Button className="bg-accent hover:bg-accent/90 gap-2 h-14 px-8 rounded-2xl font-black italic uppercase shadow-xl shadow-accent/20" asChild>
+            <Link href="/vendors/enroll">
+              <Plus size={20} />
+              New Enrollment
+            </Link>
+          </Button>
+        )}
       </div>
 
       <div className="relative">
@@ -86,7 +99,6 @@ export default function DevicesPage() {
             <Card key={device.id} className={`group relative overflow-hidden transition-all duration-500 border-none shadow-2xl ${
               device.isLocked ? 'bg-zinc-950 text-white' : 'bg-white'
             }`}>
-              {/* Status Indicator Bar */}
               <div className={`h-2 w-full ${device.isLocked ? 'bg-destructive' : 'bg-emerald-500'}`} />
               
               <CardHeader className="pb-4">

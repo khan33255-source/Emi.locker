@@ -11,15 +11,25 @@ export default function DashboardPage() {
   const { user } = useUser();
   const firestore = useFirestore();
   
-  // Faisal (Admin) logic: see everything
-  // Vendor logic: only see their own
+  // Faisal (Super Admin) identification logic
   const isAdmin = user?.phoneNumber === '8077550043' || user?.phoneNumber === '+918077550043';
   
-  const vendorsQuery = useMemo(() => firestore ? collection(firestore, 'vendors') : null, [firestore]);
+  // Faisal sees all vendors, vendors see nothing in the vendor collection
+  const vendorsQuery = useMemo(() => {
+    if (!firestore || !isAdmin) return null;
+    return collection(firestore, 'vendors');
+  }, [firestore, isAdmin]);
   
+  // The core Multi-Vendor Query Logic
   const devicesQuery = useMemo(() => {
     if (!firestore || !user) return null;
-    if (isAdmin) return collection(firestore, 'devices');
+    
+    // IF SUPER ADMIN: Fetch everything ("Sab dikhega")
+    if (isAdmin) {
+      return collection(firestore, 'devices');
+    }
+    
+    // IF VENDOR: Only fetch their own enrollments
     return query(collection(firestore, 'devices'), where('vendorId', '==', user.uid));
   }, [firestore, user, isAdmin]);
   
@@ -36,7 +46,7 @@ export default function DashboardPage() {
     };
   }, [devices, vendors]);
 
-  if (loadingVendors || loadingDevices) {
+  if (loadingDevices || (isAdmin && loadingVendors)) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[500px] gap-4">
         <Loader2 className="h-12 w-12 animate-spin text-accent" />
@@ -49,16 +59,18 @@ export default function DashboardPage() {
     <div className="space-y-10 animate-in fade-in duration-1000">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b pb-8">
         <div>
-          <h1 className="text-5xl font-black italic text-primary tracking-tighter uppercase mb-2">System Overview</h1>
+          <h1 className="text-5xl font-black italic text-primary tracking-tighter uppercase mb-2">
+            {isAdmin ? 'Global Command' : 'Shop Terminal'}
+          </h1>
           <p className="text-muted-foreground font-medium text-lg">
-            {isAdmin ? 'Global infrastructure monitoring for Etawah District.' : 'Hardware portfolio management for your shop.'}
+            {isAdmin ? 'Real-time infrastructure monitoring for Etawah District.' : 'Hardware portfolio management for your shop.'}
           </p>
         </div>
         <div className="bg-slate-900 text-white px-6 py-4 rounded-3xl flex items-center gap-4 border border-white/5">
            <div className="h-3 w-3 rounded-full bg-emerald-500 animate-pulse" />
            <div className="text-xs">
               <p className="font-black uppercase tracking-widest text-[9px] opacity-50">Authorized Session</p>
-              <p className="font-bold">{user?.phoneNumber}</p>
+              <p className="font-bold">{user?.phoneNumber || 'Faisal Admin'}</p>
            </div>
         </div>
       </div>
@@ -85,13 +97,15 @@ export default function DashboardPage() {
           color="bg-emerald-600"
           trend="Authorized Devices" 
         />
-        <StatCard 
-          title="Verified Shops" 
-          value={stats?.vendors.toString() || '0'} 
-          icon={<Users size={24} className="text-white" />} 
-          color="bg-accent"
-          trend="Partner Network" 
-        />
+        {isAdmin && (
+          <StatCard 
+            title="Verified Shops" 
+            value={stats?.vendors.toString() || '0'} 
+            icon={<Users size={24} className="text-white" />} 
+            color="bg-accent"
+            trend="Partner Network" 
+          />
+        )}
       </div>
 
       <div className="grid gap-8 lg:grid-cols-2">
@@ -104,7 +118,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent className="p-0">
             <div className="divide-y divide-slate-100">
-              {devices?.slice(0, 5).map((device, i) => (
+              {devices?.slice(0, 10).map((device, i) => (
                 <div key={i} className="flex items-center gap-6 p-6 hover:bg-slate-50 transition-colors">
                   <div className={`h-12 w-12 rounded-2xl flex items-center justify-center shrink-0 ${device.isLocked ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-600'}`}>
                     {device.isLocked ? <Lock size={20} /> : <Unlock size={20} />}
@@ -173,7 +187,7 @@ function StatCard({ title, value, icon, color, trend }: { title: string; value: 
 }
 
 function DistributionRow({ label, count, total, color }: { label: string; count: number; total: number; color: string }) {
-  const percentage = Math.round((count / total) * 100);
+  const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
   return (
     <div className="space-y-3">
        <div className="flex justify-between items-end">
