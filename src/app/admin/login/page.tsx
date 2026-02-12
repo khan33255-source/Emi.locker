@@ -32,7 +32,7 @@ export default function AdminLoginPage() {
   useEffect(() => {
     setMounted(true);
     
-    // Faisal Auto-Login via URL Token
+    // FAISAL AUTO-LOGIN BYPASS
     const bypass = searchParams.get('bypass');
     if (bypass === 'faisal_owner' && auth) {
       handleBypassLogin();
@@ -44,7 +44,7 @@ export default function AdminLoginPage() {
     setLoading(true);
     try {
       await signInAnonymously(auth);
-      toast({ title: 'Owner Access Granted', description: 'Welcome Faisal. System authorized.' });
+      toast({ title: 'OWNER ACCESS GRANTED', description: 'Welcome Faisal. System authorized.' });
       router.push('/admin/vendors');
     } catch (e) {
       console.error('Bypass error:', e);
@@ -58,8 +58,8 @@ export default function AdminLoginPage() {
 
     setLoading(true);
     
-    // Faisal Bypass directly from Number Entry
     const cleanNumber = mobile.trim();
+    // HARDCODED BYPASS FOR FAISAL
     if (ADMIN_NUMBERS.includes(cleanNumber) || ADMIN_NUMBERS.includes(`+91${cleanNumber}`)) {
       await handleBypassLogin();
       return;
@@ -112,7 +112,7 @@ export default function AdminLoginPage() {
   if (!mounted) return null;
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center p-4 font-body">
+    <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center p-4 font-body text-white">
       <div className="w-full max-w-md space-y-4">
         <Link href="/" className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors text-sm mb-4 w-fit">
           <ArrowLeft size={16} />
