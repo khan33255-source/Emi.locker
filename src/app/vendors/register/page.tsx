@@ -327,6 +327,9 @@ export default function VendorRegisterPage() {
 
       <Dialog open={cameraActive.active} onOpenChange={(open) => !open && setCameraActive({ active: false, target: null })}>
         <DialogContent className="max-w-lg p-0 overflow-hidden bg-black border-none">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Capture Aadhar Photo</DialogTitle>
+          </DialogHeader>
           <div className="relative aspect-video bg-zinc-900">
             <video ref={videoRef} className="w-full h-full object-cover" autoPlay muted playsInline />
             {hasCameraPermission === false && (
