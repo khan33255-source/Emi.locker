@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 
+  EMI.LOCKER ANDROID DPC MANIFEST
+  Project: emilocker-a9f98
+  Role: Device Owner / Profile Owner
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/api/android"
+    package="com.emilocker.mdm">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.MANAGE_DEVICE_ADMIN" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+
+    <application
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="Emi.locker Agent"
+        android:theme="@style/AppTheme">
+
+        <receiver
+            android:name=".DeviceAdminReceiver"
+            android:description="@string/device_admin_description"
+            android:label="Emi.locker Enforcement"
+            android:permission="android.permission.BIND_DEVICE_ADMIN">
+            <meta-data
+                android:name="android.app.device_admin"
+                android:resource="@xml/device_admin_policies" />
+            <intent-filter>
+                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
+                <action android:name="android.app.action.PROFILE_PROVISIONING_COMPLETE" />
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <activity
+            android:name=".LockActivity"
+            android:launchMode="singleInstance"
+            android:showOnLockScreen="true"
+            android:excludeFromRecents="true"
+            android:theme="@style/Theme.AppCompat.NoActionBar.FullScreen">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+    </application>
+</manifest>

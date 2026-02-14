@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useMemo, useState } from 'react';
@@ -74,7 +73,7 @@ export default function AdminVendorsPage() {
           </div>
           <div className="flex items-center gap-2 bg-white p-2 rounded-xl border shadow-sm">
              <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-             <span className="text-xs font-bold uppercase tracking-tighter">Admin Session Active: {user?.phoneNumber || 'Faisal'}</span>
+             <span className="text-xs font-bold uppercase tracking-tighter">Admin Session Active: Faisal (Owner)</span>
           </div>
         </div>
 
@@ -165,7 +164,6 @@ export default function AdminVendorsPage() {
         </Card>
       </div>
 
-      {/* Vendor Review Dialog */}
       <Dialog open={!!selectedVendor} onOpenChange={(open) => !open && setSelectedVendor(null)}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
