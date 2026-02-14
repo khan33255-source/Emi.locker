@@ -1,12 +1,12 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Smartphone, UserPlus, CheckCircle2, Loader2, ShieldAlert, SmartphoneNfc, QrCode, Copy, Download, RefreshCw } from 'lucide-react';
+import { Smartphone, UserPlus, CheckCircle2, Loader2, ShieldAlert, SmartphoneNfc, QrCode, Copy, RefreshCw } from 'lucide-react';
 import { useFirestore, useUser } from '@/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -14,7 +14,7 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { validateIMEI } from '@/lib/imei-utils';
 import { ImeiScanner } from '@/components/imei-scanner';
-import Link from 'next/link';
+import { QRCodeSVG } from 'qrcode.react';
 
 export default function CustomerEnrollmentPage() {
   const { user } = useUser();
@@ -80,7 +80,7 @@ export default function CustomerEnrollmentPage() {
       .then((docRef) => {
         setEnrolledId(docRef.id);
         setLoading(false);
-        toast({ title: "Enrollment Success", description: `Device ${normalizedImei1} registered.` });
+        toast({ title: "Enrollment Success", description: `Device registered in registry.` });
       })
       .catch(async (error) => {
         const permissionError = new FirestorePermissionError({
@@ -93,16 +93,29 @@ export default function CustomerEnrollmentPage() {
       });
   };
 
-  // QR PROVISIONING JSON
-  const provisioningJson = enrolledId ? {
-    "android.app.extra.PROVISIONING_DEVICE_ADMIN_COMPONENT_NAME": "com.afwsamples.testdpc/com.afwsamples.testdpc.DeviceAdminReceiver",
-    "android.app.extra.PROVISIONING_DEVICE_ADMIN_PACKAGE_DOWNLOAD_LOCATION": "https://github.com/googlesamples/android-testdpc/releases/download/v9.0.5/testdpc-9.0.5.apk",
-    "android.app.extra.PROVISIONING_DEVICE_ADMIN_SIGNATURE_CHECKSUM": "I5YvS0NGBicHn-N-V7Svi_88n5vU6t2y4I6E_6Y6U_w",
-    "android.app.extra.PROVISIONING_ADMIN_EXTRAS_BUNDLE": {
-      "com.emilocker.mdm.DEVICE_ID": enrolledId,
-      "com.emilocker.mdm.VENDOR_ID": user?.uid || 'unknown'
-    }
-  } : null;
+  // QR PROVISIONING JSON - CUSTOM AGENT CONFIG
+  const provisioningJson = useMemo(() => {
+    if (!enrolledId) return null;
+
+    // Ensure IMEIs are sorted for the extras bundle
+    const imeiArray = [formData.imei1, formData.imei2].filter(Boolean).sort((a, b) => a.localeCompare(b));
+    const imeiPrimary = imeiArray[0] || '';
+    const imeiSecondary = imeiArray[1] || '';
+
+    return {
+      "android.app.extra.PROVISIONING_DEVICE_ADMIN_COMPONENT_NAME": "com.emilocker.mdm/.DeviceAdminReceiver",
+      "android.app.extra.PROVISIONING_DEVICE_ADMIN_PACKAGE_DOWNLOAD_LOCATION": "https://faisal-storage.com/emi-agent.apk",
+      "android.app.extra.PROVISIONING_DEVICE_ADMIN_SIGNATURE_CHECKSUM": "I5YvS0NGBicHn-N-V7Svi_88n5vU6t2y4I6E_6Y6U_w",
+      "android.app.extra.PROVISIONING_ADMIN_EXTRAS_BUNDLE": {
+        "imei_primary": imeiPrimary,
+        "imei_secondary": imeiSecondary,
+        "enrolledId": enrolledId,
+        "vendorId": user?.uid || 'unknown',
+        "onemode_logic": true,
+        "safety_keygen": true
+      }
+    };
+  }, [enrolledId, formData.imei1, formData.imei2, user?.uid]);
 
   const copyPayload = () => {
     if (provisioningJson) {
@@ -112,8 +125,6 @@ export default function CustomerEnrollmentPage() {
   };
 
   if (enrolledId && provisioningJson) {
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(JSON.stringify(provisioningJson))}`;
-
     return (
       <div className="max-w-4xl mx-auto py-12 space-y-8 animate-in zoom-in duration-500 font-body">
         <div className="text-center space-y-2">
@@ -134,7 +145,13 @@ export default function CustomerEnrollmentPage() {
             </CardHeader>
             <CardContent className="flex flex-col items-center gap-8 px-10 pb-12">
               <div className="p-8 bg-white rounded-[2.5rem] shadow-2xl w-full aspect-square flex items-center justify-center border-8 border-white/10">
-                <img src={qrUrl} alt="Provisioning QR" className="w-full h-full" />
+                <QRCodeSVG 
+                  value={JSON.stringify(provisioningJson)} 
+                  size={256} 
+                  level="H" 
+                  includeMargin={false}
+                  className="w-full h-full"
+                />
               </div>
               <p className="text-center text-[10px] opacity-60 font-black uppercase tracking-[0.2em]">
                 Scan this code on the customer's factory-reset device (6-taps on welcome screen).
@@ -152,12 +169,16 @@ export default function CustomerEnrollmentPage() {
             <CardContent className="p-10 space-y-8">
               <div className="space-y-4">
                  <div className="flex justify-between border-b pb-3">
-                    <span className="text-[10px] font-black uppercase text-muted-foreground">IMEI 1 (Active)</span>
-                    <span className="font-mono font-bold text-primary">{formData.imei1}</span>
+                    <span className="text-[10px] font-black uppercase text-muted-foreground">IMEI Primary</span>
+                    <span className="font-mono font-bold text-primary">
+                      {[formData.imei1, formData.imei2].filter(Boolean).sort((a, b) => a.localeCompare(b))[0]}
+                    </span>
                  </div>
                  <div className="flex justify-between border-b pb-3">
-                    <span className="text-[10px] font-black uppercase text-muted-foreground">IMEI 2 (Active)</span>
-                    <span className="font-mono font-bold text-primary">{formData.imei2 || 'N/A'}</span>
+                    <span className="text-[10px] font-black uppercase text-muted-foreground">IMEI Secondary</span>
+                    <span className="font-mono font-bold text-primary">
+                      {[formData.imei1, formData.imei2].filter(Boolean).sort((a, b) => a.localeCompare(b))[1] || 'N/A'}
+                    </span>
                  </div>
                  <div className="flex justify-between border-b pb-3">
                     <span className="text-[10px] font-black uppercase text-muted-foreground">Registry ID</span>
