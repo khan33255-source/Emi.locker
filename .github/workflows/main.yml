@@ -21,20 +21,16 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      - name: Grant Execute Permission for Gradlew
-        working-directory: ./agent-app-android
-        run: |
-          if [ -f "gradlew" ]; then
-            chmod +x gradlew
-          fi
+      - name: Make Gradlew Executable
+        run: chmod +x agent-app-android/gradlew
 
-      - name: Build Release APK
+      - name: Build APK
         working-directory: ./agent-app-android
         run: |
           if [ -f "gradlew" ]; then
             ./gradlew assembleRelease
           else
-            # Fallback to system gradle if wrapper is missing
+            # Fallback to system gradle if wrapper is missing or binary component is absent
             gradle assembleRelease
           fi
 
