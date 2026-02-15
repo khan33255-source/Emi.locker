@@ -19,10 +19,12 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const [isMounted, setIsMounted] = useState(false);
 
-  // Faisal / Super Admin detection
+  // Super Admin detection logic
   const isSuperAdmin = useMemo(() => {
     if (!user) return false;
-    return user.phoneNumber === '+918077550043' || user.phoneNumber === '8077550043' || user.isAnonymous;
+    const isOwnerPhone = user.phoneNumber === '+918077550043' || user.phoneNumber === '8077550043';
+    const isOwnerEmail = user.email === 'khan33255@gmail.com';
+    return isOwnerPhone || isOwnerEmail || user.isAnonymous;
   }, [user]);
 
   useEffect(() => {
@@ -38,8 +40,7 @@ export default function DashboardLayout({
         return;
       }
 
-      // ROUTE PROTECTION
-      // Prevent vendors from entering admin routes
+      // ROUTE PROTECTION: Prevent vendors from entering admin routes
       if (pathname.startsWith('/admin') && !pathname.startsWith('/admin/login') && !isSuperAdmin) {
         router.replace('/vendor/dashboard');
       }
@@ -108,7 +109,7 @@ export default function DashboardLayout({
           </h2>
           <div className="flex items-center gap-4">
             <div className="text-right">
-              <p className="text-xs font-black uppercase text-primary leading-none mb-1">{isSuperAdmin ? 'Faisal (Owner)' : 'Verified Partner'}</p>
+              <p className="text-xs font-black uppercase text-primary leading-none mb-1">{isSuperAdmin ? 'Command' : 'Verified Partner'}</p>
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{isSuperAdmin ? 'Full Override' : 'Authorized Access'}</p>
             </div>
             <div className="h-10 w-10 rounded-xl bg-accent flex items-center justify-center text-white font-black italic shadow-lg shadow-accent/20">

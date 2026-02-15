@@ -1,10 +1,10 @@
 "use client";
 
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Smartphone, Users, Lock, Unlock, ShieldAlert, Loader2, Zap, Activity, ArrowRight } from 'lucide-react';
 import { useCollection, useFirestore, useUser } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { collection, doc, setDoc } from 'firebase/firestore';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
@@ -12,6 +12,20 @@ export default function AdminDashboardPage() {
   const { user } = useUser();
   const firestore = useFirestore();
   
+  // Auto-provisioning for specific Admin account
+  useEffect(() => {
+    if (user?.email === 'khan33255@gmail.com' && firestore) {
+      const adminRef = doc(firestore, 'admins', user.uid);
+      setDoc(adminRef, {
+        name: user.displayName || 'Owner',
+        mobile: 'N/A',
+        role: 'super_admin',
+        email: user.email,
+        lastActive: new Date().toISOString()
+      }, { merge: true });
+    }
+  }, [user, firestore]);
+
   const vendorsQuery = useMemo(() => firestore ? collection(firestore, 'vendors') : null, [firestore]);
   const devicesQuery = useMemo(() => firestore ? collection(firestore, 'devices') : null, [firestore]);
   
@@ -42,7 +56,7 @@ export default function AdminDashboardPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b pb-8">
         <div className="space-y-2">
           <h1 className="text-6xl font-black italic text-primary tracking-tighter uppercase mb-2">Global Command</h1>
-          <p className="text-muted-foreground font-medium text-xl">Faisal, you have full oversight of the Etawah mobile network.</p>
+          <p className="text-muted-foreground font-medium text-xl">Full network oversight is active.</p>
         </div>
         <div className="flex items-center gap-4">
           <Button className="bg-accent hover:bg-accent/90 gap-2 h-14 px-8 rounded-2xl font-black italic uppercase shadow-xl shadow-accent/20" asChild>
@@ -78,7 +92,7 @@ export default function AdminDashboardPage() {
                   </div>
                   <div className="flex-1">
                     <p className="text-lg font-black uppercase tracking-tight text-primary leading-none mb-1">{device.customerName}</p>
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">{device.model} • Shop: {device.vendorMobile}</p>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">{device.model} • Shop: {device.vendorMobile || 'Direct'}</p>
                   </div>
                   <Badge className={device.isLocked ? 'bg-red-500' : 'bg-emerald-500'}>{device.isLocked ? 'LOCKED' : 'ACTIVE'}</Badge>
                 </div>
@@ -98,7 +112,7 @@ export default function AdminDashboardPage() {
             </div>
             <div className="p-8 bg-white/5 rounded-[2.5rem] border border-white/10 backdrop-blur-xl">
                <p className="text-sm font-medium leading-relaxed italic text-white/70">
-                 "Admin oversight allows for global override of all vendor-registered hardware. Remote persistence is maintained via OS-level handshake."
+                 "Global oversight allows for master override of all hardware. Remote persistence is maintained via OS-level handshake."
                </p>
             </div>
           </CardContent>

@@ -1,15 +1,16 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper to check if user is Faisal (Owner)
+    // Helper to check if user is Faisal (Owner) or designated Admin
     function isFaisal() {
       return request.auth != null && 
         (request.auth.token.phone_number == '+918077550043' || 
          request.auth.token.phone_number == '8077550043' ||
+         request.auth.token.email == 'khan33255@gmail.com' ||
          request.auth.token.firebase.sign_in_provider == 'anonymous');
     }
 
-    // Global Access for Faisal
+    // Global Access for Faisal/Admins
     match /{document=**} {
       allow read, write: if isFaisal();
     }
@@ -26,7 +27,6 @@ service cloud.firestore {
 
     match /devices/{deviceId} {
       // Vendors can only read/write their own devices
-      // We check both the existing document (resource.data) and the incoming one (request.resource.data)
       allow read: if request.auth != null && (isFaisal() || resource.data.vendorId == request.auth.uid);
       allow create: if request.auth != null && (isFaisal() || request.resource.data.vendorId == request.auth.uid);
       allow update: if request.auth != null && (isFaisal() || resource.data.vendorId == request.auth.uid);
