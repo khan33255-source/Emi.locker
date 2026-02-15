@@ -5,6 +5,7 @@ service cloud.firestore {
     function isFaisal() {
       return request.auth != null && 
         (request.auth.token.phone_number == '+918077550043' || 
+         request.auth.token.phone_number == '8077550043' ||
          request.auth.token.firebase.sign_in_provider == 'anonymous');
     }
 
@@ -25,7 +26,11 @@ service cloud.firestore {
 
     match /devices/{deviceId} {
       // Vendors can only read/write their own devices
-      allow read, write: if request.auth != null && (isFaisal() || resource.data.vendorId == request.auth.uid || request.resource.data.vendorId == request.auth.uid);
+      // We check both the existing document (resource.data) and the incoming one (request.resource.data)
+      allow read: if request.auth != null && (isFaisal() || resource.data.vendorId == request.auth.uid);
+      allow create: if request.auth != null && (isFaisal() || request.resource.data.vendorId == request.auth.uid);
+      allow update: if request.auth != null && (isFaisal() || resource.data.vendorId == request.auth.uid);
+      allow delete: if request.auth != null && isFaisal();
     }
   }
 }
