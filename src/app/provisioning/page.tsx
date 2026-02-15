@@ -3,10 +3,11 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Shield, QrCode, Copy, Info, Download, Smartphone, Terminal, Cpu, RefreshCw, Maximize2, ExternalLink, Code2, AlertCircle } from 'lucide-react';
+import { Shield, QrCode, Copy, Smartphone, Terminal, RefreshCw, ExternalLink, Code2, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { QRCodeSVG } from 'qrcode.react';
 
 export default function ProvisioningPage() {
   const { toast } = useToast();
@@ -22,12 +23,18 @@ export default function ProvisioningPage() {
 
   const provisioningJson = useMemo(() => ({
     "android.app.extra.PROVISIONING_DEVICE_ADMIN_COMPONENT_NAME": "com.emilocker.mdm/.DeviceAdminReceiver",
-    "android.app.extra.PROVISIONING_DEVICE_ADMIN_PACKAGE_DOWNLOAD_LOCATION": "https://faisal-storage.com/emi-agent.apk",
+    "android.app.extra.PROVISIONING_DEVICE_ADMIN_PACKAGE_DOWNLOAD_LOCATION": `${origin}/emi-agent.apk`,
     "android.app.extra.PROVISIONING_DEVICE_ADMIN_SIGNATURE_CHECKSUM": "I5YvS0NGBicHn-N-V7Svi_88n5vU6t2y4I6E_6Y6U_w",
+    "android.app.extra.PROVISIONING_LEAVE_ALL_SYSTEM_APPS_ENABLED": true,
+    "android.app.extra.PROVISIONING_SKIP_ENCRYPTION": true,
     "android.app.extra.PROVISIONING_ADMIN_EXTRAS_BUNDLE": {
-      "com.emilocker.mdm.PROJECT_ID": "emilocker-a9f98",
-      "com.emilocker.mdm.SERVER_ENDPOINT": origin || 'https://emilocker-a9f98.web.app',
-      "com.emilocker.mdm.STRICT_MODE": true
+      "customerName": "PLACEHOLDER_NAME",
+      "mobile": "PLACEHOLDER_MOBILE",
+      "email": "PLACEHOLDER_EMAIL",
+      "imei1": "PLACEHOLDER_IMEI1",
+      "imei2": "PLACEHOLDER_IMEI2",
+      "server_url": origin,
+      "project_id": "emilocker-a9f98"
     }
   }), [origin]);
 
@@ -35,7 +42,7 @@ export default function ProvisioningPage() {
     navigator.clipboard.writeText(JSON.stringify(provisioningJson, null, 2));
     toast({
       title: "Payload Copied",
-      description: "Ready for QR Master Encoding.",
+      description: "Master provisioning JSON copied to clipboard.",
     });
   };
 
@@ -43,7 +50,7 @@ export default function ProvisioningPage() {
     navigator.clipboard.writeText('shasum -a 256 your-app.apk | cut -d " " -f 1 | xxd -r -p | base64 | tr "+/" "-_"');
     toast({
       title: "Command Copied",
-      description: "Checksum generator copied to clipboard.",
+      description: "Checksum generator command copied.",
     });
   };
 
@@ -98,7 +105,7 @@ export default function ProvisioningPage() {
                   <Terminal className="h-5 w-5 text-accent" />
                   <AlertTitle className="text-[10px] font-black uppercase tracking-widest text-accent mb-1">Strategy: Device Owner</AlertTitle>
                   <AlertDescription className="text-xs font-mono opacity-80 leading-relaxed">
-                    Deploy the custom agent as Device Owner. Use 6-taps on 'Welcome Screen' to scan the Master QR. This grants deep system privileges.
+                    Deploy the custom agent as Device Owner. Use 6-taps on 'Welcome Screen' to scan this Master QR. This grants deep system privileges.
                   </AlertDescription>
                </Alert>
                
@@ -144,20 +151,27 @@ export default function ProvisioningPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-xl font-black italic uppercase tracking-tighter">
               <QrCode className="text-accent" />
-              Provisioning QR
+              Master Provisioning QR
             </CardTitle>
           </CardHeader>
-          <CardContent className="flex flex-col items-center gap-8">
-            <div className="p-8 bg-white rounded-[3rem] shadow-2xl flex items-center justify-center aspect-square w-full max-w-[300px] border-8 border-primary/20">
-              <div className="relative">
-                 <QrCode size={220} className="text-primary" />
-                 <div className="absolute inset-0 bg-white/95 flex items-center justify-center flex-col gap-4 opacity-0 hover:opacity-100 transition-opacity duration-500 rounded-2xl">
-                    <p className="text-[9px] text-primary font-black uppercase tracking-[0.3em] text-center px-4">Master Provisioning Code</p>
-                    <Badge variant="outline" className="border-primary text-primary">SECURE</Badge>
-                 </div>
+          <CardContent className="flex flex-col items-center gap-8 px-8 pb-10">
+            <div className="p-8 bg-white rounded-[3.5rem] shadow-2xl flex items-center justify-center aspect-square w-full max-w-[320px] border-8 border-white/10 relative">
+              <QRCodeSVG 
+                value={JSON.stringify(provisioningJson)} 
+                size={256} 
+                level="M" 
+                includeMargin={false}
+                className="w-full h-full"
+              />
+              <div className="absolute inset-0 bg-white/95 flex items-center justify-center flex-col gap-4 opacity-0 hover:opacity-100 transition-opacity duration-500 rounded-[3rem]">
+                <p className="text-[9px] text-primary font-black uppercase tracking-[0.3em] text-center px-6">Master Provisioning Code</p>
+                <Badge variant="outline" className="border-primary text-primary">SECURE</Badge>
               </div>
             </div>
-            <p className="text-center text-xs opacity-60 font-bold uppercase tracking-widest px-8">Scan this code on a factory-reset device to initiate the MDM handshake.</p>
+            <p className="text-center text-xs opacity-60 font-bold uppercase tracking-widest leading-relaxed">
+              Scan this code on a factory-reset device to initiate the MDM handshake. 
+              <span className="block mt-2 text-accent font-black">Requires Android 7.0+</span>
+            </p>
           </CardContent>
         </Card>
 
@@ -165,14 +179,14 @@ export default function ProvisioningPage() {
           <CardHeader className="flex flex-row items-center justify-between border-b border-white/10 pb-6">
             <div>
               <CardTitle className="text-white text-xl font-black italic uppercase tracking-tighter">Payload Manifest</CardTitle>
-              <CardDescription className="text-slate-400 font-mono text-[10px]">EMI_LOCKER_CONFIG_V1.0</CardDescription>
+              <CardDescription className="text-slate-400 font-mono text-[10px]">EMI_LOCKER_ENTERPRISE_CONFIG_V1.1</CardDescription>
             </div>
             <Button variant="ghost" size="icon" onClick={copyToClipboard} className="text-slate-400 hover:text-white hover:bg-white/10">
               <Copy size={20} />
             </Button>
           </CardHeader>
           <CardContent className="p-0">
-            <pre className="text-emerald-400 p-8 text-xs font-mono overflow-x-auto h-[450px] leading-relaxed scrollbar-hide">
+            <pre className="text-emerald-400 p-8 text-xs font-mono overflow-x-auto h-[480px] leading-relaxed scrollbar-hide">
               {JSON.stringify(provisioningJson, null, 2)}
             </pre>
           </CardContent>
