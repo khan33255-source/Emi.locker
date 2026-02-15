@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState, useMemo } from 'react';
@@ -6,9 +5,8 @@ import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { Shield, Smartphone, Users, LayoutDashboard, QrCode, LogOut, Settings, PlusCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useUser, useAuth, useDoc, useFirestore } from '@/firebase';
+import { useUser, useAuth, useFirestore } from '@/firebase';
 import { signOut } from 'firebase/auth';
-import { doc } from 'firebase/firestore';
 
 export default function DashboardLayout({
   children,
@@ -17,12 +15,11 @@ export default function DashboardLayout({
 }) {
   const { user, loading: userLoading } = useUser();
   const auth = useAuth();
-  const firestore = useFirestore();
   const router = useRouter();
   const pathname = usePathname();
   const [isMounted, setIsMounted] = useState(false);
 
-  // Check if Faisal or Admin
+  // Faisal / Super Admin detection
   const isSuperAdmin = useMemo(() => {
     if (!user) return false;
     return user.phoneNumber === '+918077550043' || user.phoneNumber === '8077550043' || user.isAnonymous;
@@ -35,10 +32,16 @@ export default function DashboardLayout({
   useEffect(() => {
     if (isMounted && !userLoading) {
       if (!user) {
-        if (!pathname.startsWith('/admin') && !pathname.startsWith('/vendors/login') && pathname !== '/') {
+        if (!pathname.startsWith('/admin/login') && !pathname.startsWith('/vendors/login') && pathname !== '/') {
            router.replace('/vendors/login');
         }
         return;
+      }
+
+      // ROUTE PROTECTION
+      // Prevent vendors from entering admin routes
+      if (pathname.startsWith('/admin') && !pathname.startsWith('/admin/login') && !isSuperAdmin) {
+        router.replace('/vendor/dashboard');
       }
 
       // REDIRECTION LOGIC FOR DASHBOARD HOME
@@ -65,14 +68,14 @@ export default function DashboardLayout({
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background">
         <Loader2 className="h-10 w-10 animate-spin text-accent" />
-        <p className="mt-4 text-sm font-medium text-muted-foreground">Syncing Security Credentials...</p>
+        <p className="mt-4 text-sm font-medium text-muted-foreground">Verifying Security Clearances...</p>
       </div>
     );
   }
 
-  if (!user && pathname !== '/' && !pathname.startsWith('/admin/login') && !pathname.startsWith('/vendors/login')) {
-    return null;
-  }
+  // Hide layout for login pages
+  const isLoginPage = pathname.startsWith('/admin/login') || pathname.startsWith('/vendors/login') || pathname === '/';
+  if (isLoginPage) return <>{children}</>;
 
   return (
     <div className="flex min-h-screen bg-background font-body">
@@ -84,15 +87,14 @@ export default function DashboardLayout({
           </Link>
         </div>
         <nav className="flex-1 px-4 space-y-1">
-          <NavItem href={isSuperAdmin ? "/admin/dashboard" : "/vendor/dashboard"} icon={<LayoutDashboard size={20} />} label="Overview" />
-          <NavItem href="/devices" icon={<Smartphone size={20} />} label="Managed Devices" />
-          {!isSuperAdmin && <NavItem href="/vendors/enroll" icon={<PlusCircle size={20} />} label="Enroll Customer" />}
-          {isSuperAdmin && <NavItem href="/admin/vendors" icon={<Users size={20} />} label="Vendors List" />}
+          <NavItem href={isSuperAdmin ? "/admin/dashboard" : "/vendor/dashboard"} icon={<LayoutDashboard size={20} />} label="Command Center" />
+          <NavItem href="/devices" icon={<Smartphone size={20} />} label="Portfolio" />
+          {!isSuperAdmin && <NavItem href="/vendors/enroll" icon={<PlusCircle size={20} />} label="Enroll Asset" />}
+          {isSuperAdmin && <NavItem href="/admin/vendors" icon={<Users size={20} />} label="Partner Registry" />}
           <NavItem href="/provisioning" icon={<QrCode size={20} />} label="Provisioning" />
-          <NavItem href="#" icon={<Settings size={20} />} label="Settings" />
         </nav>
         <div className="p-4 border-t border-white/10">
-          <Button variant="ghost" className="w-full justify-start gap-2 text-primary-foreground/70" onClick={handleSignOut}>
+          <Button variant="ghost" className="w-full justify-start gap-2 text-primary-foreground/70 hover:text-white" onClick={handleSignOut}>
             <LogOut size={20} />
             Sign Out
           </Button>
@@ -101,15 +103,15 @@ export default function DashboardLayout({
 
       <div className="flex-1 flex flex-col">
         <header className="h-16 bg-white border-b flex items-center justify-between px-8">
-          <h2 className="text-lg font-headline font-semibold text-primary">
-            {isSuperAdmin ? 'Global Command Terminal' : 'Shop Control Center'}
+          <h2 className="text-lg font-headline font-black italic uppercase tracking-tight text-primary">
+            {isSuperAdmin ? 'Global Terminal' : 'Shop Terminal'}
           </h2>
           <div className="flex items-center gap-4">
             <div className="text-right">
-              <p className="text-sm font-medium">{isSuperAdmin ? 'Faisal (Owner)' : 'Verified Vendor'}</p>
-              <p className="text-xs text-muted-foreground">{isSuperAdmin ? 'System Admin' : 'Shop Access'}</p>
+              <p className="text-xs font-black uppercase text-primary leading-none mb-1">{isSuperAdmin ? 'Faisal (Owner)' : 'Verified Partner'}</p>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{isSuperAdmin ? 'Full Override' : 'Authorized Access'}</p>
             </div>
-            <div className="h-10 w-10 rounded-full bg-accent flex items-center justify-center text-white font-black italic">
+            <div className="h-10 w-10 rounded-xl bg-accent flex items-center justify-center text-white font-black italic shadow-lg shadow-accent/20">
               {isSuperAdmin ? 'SA' : 'VN'}
             </div>
           </div>
@@ -126,9 +128,9 @@ function NavItem({ href, icon, label }: { href: string; icon: React.ReactNode; l
   const pathname = usePathname();
   const isActive = pathname === href;
   return (
-    <Link href={href} className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${isActive ? 'bg-white/10 text-white' : 'text-primary-foreground/70 hover:text-white'}`}>
+    <Link href={href} className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${isActive ? 'bg-accent text-white shadow-lg shadow-accent/20 translate-x-1' : 'text-primary-foreground/60 hover:text-white hover:translate-x-1'}`}>
       {icon}
-      <span className="text-sm font-medium">{label}</span>
+      <span className="text-xs font-black uppercase tracking-widest">{label}</span>
     </Link>
   );
 }
