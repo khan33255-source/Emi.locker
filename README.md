@@ -13,11 +13,11 @@ To push your local code to your new GitHub repository, run these commands in you
 # Initialize local git repository
 git init
 
-# Add all project files
+# Add all project files (including Android source and workflows)
 git add .
 
 # Create initial commit
-git commit -m "Initial commit: Emi.locker Enterprise System"
+git commit -m "Finalized EMI Locker and MDM Agent"
 
 # Set default branch to main
 git branch -M main
@@ -36,16 +36,12 @@ When deploying your custom MDM agent (`com.emilocker.mdm`), you must provide a S
 shasum -a 256 your-app.apk | cut -d " " -f 1 | xxd -r -p | base64 | tr "+/" "-_"
 ```
 
-This generates a URL-safe Base64 encoded string required for the `PROVISIONING_DEVICE_ADMIN_SIGNATURE_CHECKSUM` field in the MDM Provisioning QR.
-
 ## Project Structure
-- `src/app`: Next.js App Router pages and layouts (Command Terminal).
-- `src/ai`: Genkit AI flows for dynamic messaging and automation.
-- `src/components`: UI components (ShadCN).
+- `src/app`: Next.js App Router pages (Command Terminal).
+- `src/ai`: Genkit AI flows for dynamic messaging.
 - `agent-app-android`: Source code for the custom MDM DPC Agent.
-- `docs/android`: Android DPC manifest and receiver templates for reference.
-- `.github/workflows`: Automated APK build pipelines using GitHub Actions.
+- `.github/workflows`: Automated APK build pipelines.
 
 ## Security Roles
-- **Super Admin (Faisal)**: Global oversight of all vendors and devices via the `?bypass=faisal_owner` route.
-- **Vendors**: Shop-specific dashboard for customer enrollment and hardware management.
+- **Super Admin (Faisal)**: Global oversight via `/admin/dashboard`.
+- **Vendors**: Shop-specific management via `/vendor/dashboard`.
